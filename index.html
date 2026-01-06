@@ -40,7 +40,7 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // Google Apps Script Web App URL
+    // Google Apps Script Web App URL - แทนที่ด้วย URL ของคุณ
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbywEsGvJIzEI0BBelUGqySB54nb9wBosdXqytYg-dCQQDaCzezHUs3TA-VGJciB2zUtSw/exec';
 
     const AlertCircle = ({ className }) => (
@@ -85,7 +85,7 @@
       const [currentView, setCurrentView] = useState('home');
       const [repairs, setRepairs] = useState([]);
       const [loading, setLoading] = useState(true);
-      const [connectionStatus, setConnectionStatus] = useState('connecting'); // connecting, connected, error
+      const [connectionStatus, setConnectionStatus] = useState('connecting');
       const [errorMessage, setErrorMessage] = useState('');
       const [formData, setFormData] = useState({
         teacherName: '',
@@ -119,14 +119,13 @@
           });
 
           console.log('Response status:', response.status);
-          console.log('Response headers:', response.headers);
 
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
 
           const text = await response.text();
-          console.log('Response text:', text);
+          console.log('Response text:', text.substring(0, 200)); // แสดงแค่ส่วนหัว
 
           let data;
           try {
@@ -136,22 +135,13 @@
             throw new Error('ไม่สามารถแปลงข้อมูลเป็น JSON ได้');
           }
 
-          console.log('Parsed data:', data);
+          console.log('จำนวนข้อมูลที่ได้:', data.length);
 
-          // ตรวจสอบว่าข้อมูลเป็น array หรือไม่
           if (Array.isArray(data)) {
             setRepairs(data.sort((a, b) => b.id - a.id));
             setConnectionStatus('connected');
-          } else if (data && typeof data === 'object') {
-            // ถ้าข้อมูลเป็น object อาจจะมี structure แบบอื่น
-            if (data.data && Array.isArray(data.data)) {
-              setRepairs(data.data.sort((a, b) => b.id - a.id));
-              setConnectionStatus('connected');
-            } else {
-              throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
-            }
           } else {
-            throw new Error('ข้อมูลที่ได้รับไม่ใช่ array');
+            throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
           }
 
         } catch (error) {
@@ -161,11 +151,11 @@
           let message = 'ไม่สามารถโหลดข้อมูลได้';
           
           if (error.message.includes('Failed to fetch')) {
-            message = 'ไม่สามารถเชื่อมต่อกับ Google Sheets ได้ อาจเป็นเพราะ:\n\n' +
-                     '1. URL ของ Apps Script ไม่ถูกต้อง\n' +
-                     '2. Apps Script ไม่ได้เปิดให้เข้าถึงแบบ Public\n' +
-                     '3. มีปัญหาเรื่อง CORS policy\n\n' +
-                     'กรุณาตรวจสอบการตั้งค่า Google Apps Script';
+            message = 'ไม่สามารถเชื่อมต่อกับ Google Sheets ได้\n\n' +
+                     'กรุณาตรวจสอบ:\n' +
+                     '1. URL ของ Apps Script ถูกต้องหรือไม่\n' +
+                     '2. Apps Script เปิดให้เข้าถึงแบบ "Anyone" หรือไม่\n' +
+                     '3. มี Sheet ชื่อ "Sheet1" ใน Google Sheets หรือไม่';
           } else if (error.message.includes('HTTP error')) {
             message = `เกิดข้อผิดพลาดจากเซิร์ฟเวอร์: ${error.message}`;
           } else {
@@ -173,8 +163,6 @@
           }
           
           setErrorMessage(message);
-          
-          // ใช้ข้อมูล mock สำหรับทดสอบ
           setRepairs([]);
           
         } finally {
@@ -282,10 +270,9 @@
         const updated = {
           ...repair,
           rating: {
-            score: ratingData.rating,
-            comment: ratingData.comment,
             technicianName: ratingData.technicianName,
-            ratedAt: new Date().toLocaleString('th-TH')
+            score: ratingData.rating,
+            comment: ratingData.comment
           }
         };
 
@@ -328,7 +315,7 @@
           'วันที่แจ้ง': repair.createdAt,
           'วันที่เสร็จสิ้น': repair.completedAt || '-',
           'ช่างผู้ซ่อม': repair.rating?.technicianName || '-',
-          'คะแนนประเมิน': repair.rating ? `${repair.rating.score} ดาว` : '-',
+          'คะแนนประเมิน': repair.rating?.score ? `${repair.rating.score} ดาว` : '-',
           'ความคิดเห็น': repair.rating?.comment || '-'
         }));
 
@@ -652,7 +639,7 @@
                                 </p>
                               </div>
 
-                              {repair.rating && (
+                              {repair.rating && repair.rating.score > 0 && (
                                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200 mb-4">
                                   <div className="flex items-center gap-2 mb-3">
                                     <span className="text-sm font-semibold text-green-800">✅ การประเมิน:</span>
@@ -702,7 +689,7 @@
                                     ✅ เสร็จสิ้น
                                   </button>
                                 )}
-                                {repair.status === 'เสร็จสิ้น' && !repair.rating && (
+                                {repair.status === 'เสร็จสิ้น' && (!repair.rating || repair.rating.score === 0) && (
                                   <button
                                     onClick={() => startRating(repair)}
                                     className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2.5 px-4 rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all text-sm font-medium shadow-md hover:shadow-lg"
