@@ -73,10 +73,20 @@
       </svg>
     );
 
+    const RefreshCw = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <polyline points="1 20 1 14 7 14"></polyline>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+      </svg>
+    );
+
     function RepairSystem() {
       const [currentView, setCurrentView] = useState('home');
       const [repairs, setRepairs] = useState([]);
       const [loading, setLoading] = useState(true);
+      const [connectionStatus, setConnectionStatus] = useState('connecting'); // connecting, connected, error
+      const [errorMessage, setErrorMessage] = useState('');
       const [formData, setFormData] = useState({
         teacherName: '',
         department: '',
@@ -98,13 +108,75 @@
 
       const loadRepairs = async () => {
         setLoading(true);
+        setErrorMessage('');
+        
         try {
-          const response = await fetch(SCRIPT_URL);
-          const data = await response.json();
-          setRepairs(data.sort((a, b) => b.id - a.id));
+          console.log('กำลังโหลดข้อมูลจาก:', SCRIPT_URL);
+          
+          const response = await fetch(SCRIPT_URL, {
+            method: 'GET',
+            redirect: 'follow'
+          });
+
+          console.log('Response status:', response.status);
+          console.log('Response headers:', response.headers);
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const text = await response.text();
+          console.log('Response text:', text);
+
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch (e) {
+            console.error('JSON parse error:', e);
+            throw new Error('ไม่สามารถแปลงข้อมูลเป็น JSON ได้');
+          }
+
+          console.log('Parsed data:', data);
+
+          // ตรวจสอบว่าข้อมูลเป็น array หรือไม่
+          if (Array.isArray(data)) {
+            setRepairs(data.sort((a, b) => b.id - a.id));
+            setConnectionStatus('connected');
+          } else if (data && typeof data === 'object') {
+            // ถ้าข้อมูลเป็น object อาจจะมี structure แบบอื่น
+            if (data.data && Array.isArray(data.data)) {
+              setRepairs(data.data.sort((a, b) => b.id - a.id));
+              setConnectionStatus('connected');
+            } else {
+              throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
+            }
+          } else {
+            throw new Error('ข้อมูลที่ได้รับไม่ใช่ array');
+          }
+
         } catch (error) {
           console.error('Error loading repairs:', error);
-          alert('ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+          setConnectionStatus('error');
+          
+          let message = 'ไม่สามารถโหลดข้อมูลได้';
+          
+          if (error.message.includes('Failed to fetch')) {
+            message = 'ไม่สามารถเชื่อมต่อกับ Google Sheets ได้ อาจเป็นเพราะ:\n\n' +
+                     '1. URL ของ Apps Script ไม่ถูกต้อง\n' +
+                     '2. Apps Script ไม่ได้เปิดให้เข้าถึงแบบ Public\n' +
+                     '3. มีปัญหาเรื่อง CORS policy\n\n' +
+                     'กรุณาตรวจสอบการตั้งค่า Google Apps Script';
+          } else if (error.message.includes('HTTP error')) {
+            message = `เกิดข้อผิดพลาดจากเซิร์ฟเวอร์: ${error.message}`;
+          } else {
+            message = `เกิดข้อผิดพลาด: ${error.message}`;
+          }
+          
+          setErrorMessage(message);
+          
+          // ใช้ข้อมูล mock สำหรับทดสอบ
+          setRepairs([]);
+          
         } finally {
           setLoading(false);
         }
@@ -112,6 +184,8 @@
 
       const saveRepair = async (repair, action) => {
         try {
+          console.log('Sending data:', { action, ...repair });
+          
           const response = await fetch(SCRIPT_URL, {
             method: 'POST',
             headers: {
@@ -120,16 +194,24 @@
             body: JSON.stringify({
               action: action,
               ...repair
-            })
+            }),
+            redirect: 'follow'
           });
+          
+          console.log('Save response status:', response.status);
           
           if (response.ok) {
             await loadRepairs();
             return true;
           }
+          
+          const errorText = await response.text();
+          console.error('Save error response:', errorText);
           return false;
+          
         } catch (error) {
           console.error('Error saving repair:', error);
+          alert(`เกิดข้อผิดพลาด: ${error.message}`);
           return false;
         }
       };
@@ -168,7 +250,7 @@
           alert('บันทึกการแจ้งซ่อมเรียบร้อยแล้ว');
           setCurrentView('list');
         } else {
-          alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+          alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
         }
       };
 
@@ -299,11 +381,49 @@
                     </div>
                   </div>
                 </div>
-                <div className="mt-4 flex items-center gap-2 text-sm text-blue-100">
-                  <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span>เชื่อมต่อ Google Sheets แล้ว</span>
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className={`h-2 w-2 rounded-full ${
+                      connectionStatus === 'connected' ? 'bg-green-400 animate-pulse' :
+                      connectionStatus === 'error' ? 'bg-red-400' :
+                      'bg-yellow-400 animate-pulse'
+                    }`}></div>
+                    <span className="text-blue-100">
+                      {connectionStatus === 'connected' && 'เชื่อมต่อ Google Sheets แล้ว'}
+                      {connectionStatus === 'error' && 'ไม่สามารถเชื่อมต่อ Google Sheets'}
+                      {connectionStatus === 'connecting' && 'กำลังเชื่อมต่อ...'}
+                    </span>
+                  </div>
+                  {connectionStatus === 'error' && (
+                    <button
+                      onClick={loadRepairs}
+                      className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm transition-all"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      ลองใหม่
+                    </button>
+                  )}
                 </div>
               </div>
+
+              {errorMessage && (
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 m-6 rounded-r-lg">
+                  <div className="flex items-start">
+                    <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
+                    <div>
+                      <h3 className="text-sm font-medium text-red-800 mb-1">เกิดข้อผิดพลาด</h3>
+                      <p className="text-sm text-red-700 whitespace-pre-line">{errorMessage}</p>
+                      <button
+                        onClick={loadRepairs}
+                        className="mt-3 flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-all"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                        ลองเชื่อมต่อใหม่
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="flex border-b">
                 <button
@@ -444,9 +564,10 @@
 
                         <button
                           onClick={handleSubmit}
-                          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                          disabled={connectionStatus === 'error'}
+                          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                         >
-                          📤 ส่งแจ้งซ่อม
+                          {connectionStatus === 'error' ? '⚠️ ไม่สามารถส่งได้ (ไม่เชื่อมต่อ)' : '📤 ส่งแจ้งซ่อม'}
                         </button>
                         </div>
                       </div>
@@ -566,7 +687,8 @@
                                 {repair.status === 'รอดำเนินการ' && (
                                   <button
                                     onClick={() => updateRepairStatus(repair.id, 'กำลังดำเนินการ')}
-                                    className="flex-1 bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition-all text-sm font-medium shadow-md hover:shadow-lg"
+                                    disabled={connectionStatus === 'error'}
+                                    className="flex-1 bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
                                     ▶️ เริ่มดำเนินการ
                                   </button>
@@ -574,7 +696,8 @@
                                 {repair.status === 'กำลังดำเนินการ' && (
                                   <button
                                     onClick={() => updateRepairStatus(repair.id, 'เสร็จสิ้น')}
-                                    className="flex-1 bg-green-500 text-white py-2.5 px-4 rounded-lg hover:bg-green-600 transition-all text-sm font-medium shadow-md hover:shadow-lg"
+                                    disabled={connectionStatus === 'error'}
+                                    className="flex-1 bg-green-500 text-white py-2.5 px-4 rounded-lg hover:bg-green-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
                                     ✅ เสร็จสิ้น
                                   </button>
@@ -678,7 +801,7 @@
                           </button>
                           <button
                             onClick={handleRatingSubmit}
-                            disabled={ratingData.rating === 0}
+                            disabled={ratingData.rating === 0 || connectionStatus === 'error'}
                             className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transform hover:-translate-y-0.5"
                           >
                             ✅ ส่งการประเมิน
