@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ระบบแจ้งซ่อมคอมพิวเตอร์และอุปกรณ์</title>
+
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    #root { min-height: 100vh; }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbywEsGvJIzEI0BBelUGqySB54nb9wBosdXqytYg-dCQQDaCzezHUs3TA-VGJciB2zUtSw/exec';
+
+    const Database = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+      </svg>
+    );
+
+    function RepairSystem() {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+          <div className="container mx-auto px-4 py-8 max-w-4xl">
+            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+
+              {/* ===== HEADER ===== */}
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6">
+                <div className="flex items-center justify-between">
+
+                  <div className="flex items-center gap-4">
+                    {/* LOGO */}
+                    <img
+                      src="Fix-Folder/logo.png"
+                      alt="Logo"
+                      className="h-16 w-auto bg-white rounded-lg p-2 shadow"
+                    />
+
+                    <div>
+                      <h1 className="text-3xl font-bold mb-1">
+                        ระบบแจ้งซ่อมคอมพิวเตอร์และอุปกรณ์
+                      </h1>
+                      <p className="text-blue-100">
+                        สำหรับหน่วยงานราชการ
+                      </p>
+                    </div>
+                  </div>
+
+                  <Database className="h-12 w-12 opacity-80" />
+                </div>
+
+                <div className="mt-3 flex items-center gap-2 text-sm text-blue-100">
+                  <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span>เชื่อมต่อ Google Sheets แล้ว</span>
+                </div>
+              </div>
+              {/* ===== END HEADER ===== */}
+
+              <div className="p-6 text-center text-gray-600">
+                ระบบพร้อมใช้งานแล้ว 🎉
+              </div>
+
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<RepairSystem />);
+  </script>
+</body>
+</html>
