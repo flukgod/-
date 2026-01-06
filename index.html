@@ -170,39 +170,37 @@
         }
       };
 
-      const saveRepair = async (repair, action) => {
-        try {
-          console.log('Sending data:', { action, ...repair });
-          
-          const response = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              action: action,
-              ...repair
-            }),
-            redirect: 'follow'
-          });
-          
-          console.log('Save response status:', response.status);
-          
-          if (response.ok) {
-            await loadRepairs();
-            return true;
-          }
-          
-          const errorText = await response.text();
-          console.error('Save error response:', errorText);
-          return false;
-          
-        } catch (error) {
-          console.error('Error saving repair:', error);
-          alert(`เกิดข้อผิดพลาด: ${error.message}`);
-          return false;
-        }
-      };
+const saveRepair = async (repair, action) => {
+  try {
+    console.log('Sending data:', { action, ...repair });
+
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: action,
+        ...repair
+      }),
+      redirect: 'follow'
+    });
+
+    console.log('Save response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Save error response:', errorText);
+      return false;
+    }
+
+    await loadRepairs();
+    return true;
+
+  } catch (error) {
+    console.error('Error saving repair:', error);
+    alert('เชื่อมต่อ Google Sheets ไม่ได้');
+    return false;
+  }
+};
+
 
       const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -811,3 +809,4 @@
 </body>
 
 </html>
+
