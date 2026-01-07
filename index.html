@@ -28,24 +28,15 @@
   </style>
 </head>
 <body>
-  <div id="root">
-    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; color: #666;">
-      <div style="text-align: center;">
-        <div style="width: 50px; height: 50px; border: 4px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
-        <p>กำลังโหลดระบบ...</p>
-      </div>
-    </div>
-  </div>
+  <div id="root"></div>
 
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // Google Apps Script Web App URL - แทนที่ด้วย URL ของคุณ
+    // ⚠️ สำคัญ: แทนที่ URL นี้ด้วย Apps Script URL ของคุณ
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-G8VFLfbSLt05vfmOtSimJyhcFYdiDx4SsykJ6LMm8a5zgNXXAfZrkIKCtFx2wiZw0g/exec';
-    const [currentView, setCurrentView] = useState('home');
-    const [statusFilter, setStatusFilter] = useState('รอดำเนินการ');
-    const [repairs, setRepairs] = useState([]);
-    
+
+    // SVG Icons
     const AlertCircle = ({ className }) => (
       <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10"></circle>
@@ -86,6 +77,7 @@
 
     function RepairSystem() {
       const [currentView, setCurrentView] = useState('home');
+      const [statusFilter, setStatusFilter] = useState('รอดำเนินการ');
       const [repairs, setRepairs] = useState([]);
       const [loading, setLoading] = useState(true);
       const [connectionStatus, setConnectionStatus] = useState('connecting');
@@ -128,7 +120,7 @@
           }
 
           const text = await response.text();
-          console.log('Response text:', text.substring(0, 200)); // แสดงแค่ส่วนหัว
+          console.log('Response text:', text.substring(0, 200));
 
           let data;
           try {
@@ -173,37 +165,36 @@
         }
       };
 
-const saveRepair = async (repair, action) => {
-  try {
-    console.log('Sending data:', { action, ...repair });
+      const saveRepair = async (repair, action) => {
+        try {
+          console.log('Sending data:', { action, ...repair });
 
-    const response = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({
-        action: action,
-        ...repair
-      }),
-      redirect: 'follow'
-    });
+          const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+              action: action,
+              ...repair
+            }),
+            redirect: 'follow'
+          });
 
-    console.log('Save response status:', response.status);
+          console.log('Save response status:', response.status);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Save error response:', errorText);
-      return false;
-    }
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Save error response:', errorText);
+            return false;
+          }
 
-    await loadRepairs();
-    return true;
+          await loadRepairs();
+          return true;
 
-  } catch (error) {
-    console.error('Error saving repair:', error);
-    alert('เชื่อมต่อ Google Sheets ไม่ได้');
-    return false;
-  }
-};
-
+        } catch (error) {
+          console.error('Error saving repair:', error);
+          alert('ไม่สามารถเชื่อมต่อกับ Google Sheets ได้');
+          return false;
+        }
+      };
 
       const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -353,6 +344,7 @@ const saveRepair = async (repair, action) => {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
           <div className="container mx-auto px-4 py-8 max-w-4xl">
             <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+              {/* Header */}
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -395,6 +387,7 @@ const saveRepair = async (repair, action) => {
                 </div>
               </div>
 
+              {/* Error Message */}
               {errorMessage && (
                 <div className="bg-red-50 border-l-4 border-red-500 p-4 m-6 rounded-r-lg">
                   <div className="flex items-start">
@@ -414,6 +407,7 @@ const saveRepair = async (repair, action) => {
                 </div>
               )}
 
+              {/* Navigation Tabs */}
               <div className="flex border-b">
                 <button
                   onClick={() => setCurrentView('home')}
@@ -437,6 +431,7 @@ const saveRepair = async (repair, action) => {
                 </button>
               </div>
 
+              {/* Content */}
               <div className="p-6">
                 {loading ? (
                   <div className="text-center py-12">
@@ -445,6 +440,7 @@ const saveRepair = async (repair, action) => {
                   </div>
                 ) : (
                   <>
+                    {/* Form View */}
                     {currentView === 'home' && (
                       <div className="space-y-5 animate-fadeIn">
                         <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
@@ -458,131 +454,128 @@ const saveRepair = async (repair, action) => {
                         </div>
 
                         <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            👤 ชื่อ-นามสกุล ผู้แจ้ง <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            name="teacherName"
-                            value={formData.teacherName}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                            placeholder="ระบุชื่อ-นามสกุล"
-                          />
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
-                              🏢 หน่วยงาน/แผนก <span className="text-red-500">*</span>
+                              👤 ชื่อ-นามสกุล ผู้แจ้ง <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
-                              name="department"
-                              value={formData.department}
+                              name="teacherName"
+                              value={formData.teacherName}
                               onChange={handleInputChange}
                               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                              placeholder="ระบุหน่วยงาน/แผนก"
+                              placeholder="ระบุชื่อ-นามสกุล"
                             />
+                          </div>
+
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                🏢 หน่วยงาน/แผนก <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                name="department"
+                                value={formData.department}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                placeholder="ระบุหน่วยงาน/แผนก"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                📞 เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="tel"
+                                name="phone"
+                                value={formData.phone}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  const numbers = value.replace(/[^\d]/g, '');
+                                  const limited = numbers.slice(0, 10);
+                                  
+                                  let formatted = limited;
+                                  if (limited.length > 6) {
+                                    formatted = limited.slice(0, 3) + '-' + limited.slice(3, 6) + '-' + limited.slice(6);
+                                  } else if (limited.length > 3) {
+                                    formatted = limited.slice(0, 3) + '-' + limited.slice(3);
+                                  }
+                                  
+                                  setFormData({ ...formData, phone: formatted });
+                                }}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                placeholder="0xx-xxx-xxxx"
+                                maxLength="12"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                🔧 ประเภทปัญหา <span className="text-red-500">*</span>
+                              </label>
+                              <select
+                                name="problemType"
+                                value={formData.problemType}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                              >
+                                <option value="">เลือกประเภทปัญหา</option>
+                                <option value="คอมพิวเตอร์">🖥️ คอมพิวเตอร์</option>
+                                <option value="เครื่องพิมพ์">🖨️ เครื่องพิมพ์</option>
+                                <option value="เครือข่าย/อินเทอร์เน็ต">🌐 เครือข่าย/อินเทอร์เน็ต</option>
+                                <option value="โปรแกรม/ซอฟต์แวร์">💾 โปรแกรม/ซอฟต์แวร์</option>
+                                <option value="อุปกรณ์อื่นๆ">🔧 อุปกรณ์อื่นๆ</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                📍 สถานที่ <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                name="location"
+                                value={formData.location}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                placeholder="อาคาร/ห้อง"
+                              />
+                            </div>
                           </div>
 
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
-                              📞 เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+                              📝 รายละเอียดปัญหา <span className="text-red-500">*</span>
                             </label>
-                            <input
-                              type="tel"
-                              name="phone"
-                              value={formData.phone}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                // ลบทุกอย่างที่ไม่ใช่ตัวเลข
-                                const numbers = value.replace(/[^\d]/g, '');
-                                
-                                // จำกัดไม่เกิน 10 ตัว
-                                const limited = numbers.slice(0, 10);
-                                
-                                // ใส่ขีดอัตโนมัติ
-                                let formatted = limited;
-                                if (limited.length > 6) {
-                                  formatted = limited.slice(0, 3) + '-' + limited.slice(3, 6) + '-' + limited.slice(6);
-                                } else if (limited.length > 3) {
-                                  formatted = limited.slice(0, 3) + '-' + limited.slice(3);
-                                }
-                                
-                                setFormData({ ...formData, phone: formatted });
-                              }}
+                            <textarea
+                              name="description"
+                              value={formData.description}
+                              onChange={handleInputChange}
+                              rows="5"
                               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                              placeholder="xxx-xxx-xxxx"
-                              maxLength="12"
+                              placeholder="อธิบายปัญหาที่พบโดยละเอียด เช่น คอมพิวเตอร์เปิดเครื่องไม่ติด, ไวไฟใช้ไม่ได้, Office ใช้งานไม่ได้"
                             />
                           </div>
-                        </div>
 
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                              🔧 ประเภทปัญหา <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                              name="problemType"
-                              value={formData.problemType}
-                              onChange={handleInputChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
-                            >
-                              <option value="">เลือกประเภทปัญหา</option>
-                              <option value="คอมพิวเตอร์">🖥️ คอมพิวเตอร์</option>
-                              <option value="เครื่องพิมพ์">🖨️ เครื่องพิมพ์</option>
-                              <option value="เครือข่าย/อินเทอร์เน็ต">🌐 เครือข่าย/อินเทอร์เน็ต</option>
-                              <option value="โปรแกรม/ซอฟต์แวร์">💾 โปรแกรม/ซอฟต์แวร์</option>
-                              <option value="อุปกรณ์อื่นๆ">🔧 อุปกรณ์อื่นๆ</option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                              📍 สถานที่ <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              name="location"
-                              value={formData.location}
-                              onChange={handleInputChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                              placeholder="อาคาร/ห้อง"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            📝 รายละเอียดปัญหา <span className="text-red-500">*</span>
-                          </label>
-                          <textarea
-                            name="description"
-                            value={formData.description}
-                            onChange={handleInputChange}
-                            rows="5"
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                            placeholder="อธิบายปัญหาที่พบโดยละเอียด เช่น คอมพิวเตอร์เปิดเครื่องไม่ติด, ไวไฟใช้ไม่ได้, Office ใช้งานไม่ได้ )"
-                          />
-                        </div>
-
-                        <button
-                          onClick={handleSubmit}
-                          disabled={connectionStatus === 'error'}
-                          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                        >
-                          {connectionStatus === 'error' ? '⚠️ ไม่สามารถส่งได้ (ไม่เชื่อมต่อ)' : '📤 ส่งแจ้งซ่อม'}
-                        </button>
+                          <button
+                            onClick={handleSubmit}
+                            disabled={connectionStatus === 'error'}
+                            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                          >
+                            {connectionStatus === 'error' ? '⚠️ ไม่สามารถส่งได้ (ไม่เชื่อมต่อ)' : '📤 ส่งแจ้งซ่อม'}
+                          </button>
                         </div>
                       </div>
                     )}
 
+                    {/* List View */}
                     {currentView === 'list' && (
                       <div className="space-y-4 animate-fadeIn">
-                        {/* แท็บเลือกสถานะ */}
+                        {/* Status Filter Tabs */}
                         <div className="flex border-b border-gray-200 overflow-x-auto">
                           <button
                             onClick={() => setStatusFilter('รอดำเนินการ')}
@@ -653,156 +646,115 @@ const saveRepair = async (repair, action) => {
                           </div>
                         ) : (
                           <div className="space-y-3">
-                          {repairs.filter(r => r.status === statusFilter).map((repair) => (                          <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                              📞 เบอร์โทรศัพท์ <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="tel"
-                              name="phone"
-                              value={formData.phone}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                // ลบทุกอย่างที่ไม่ใช่ตัวเลข
-                                const numbers = value.replace(/[^\d]/g, '');
-                                
-                                // จำกัดไม่เกิน 10 ตัว
-                                const limited = numbers.slice(0, 10);
-                                
-                                // ใส่ขีดอัตโนมัติ
-                                let formatted = limited;
-                                if (limited.length > 6) {
-                                  formatted = limited.slice(0, 3) + '-' + limited.slice(3, 6) + '-' + limited.slice(6);
-                                } else if (limited.length > 3) {
-                                  formatted = limited.slice(0, 3) + '-' + limited.slice(3);
-                                }
-                                
-                                setFormData({ ...formData, phone: formatted });
-                              }}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                              placeholder="094-283-1301"
-                              maxLength="12"
-                            />
-                          </div>
-
-                        {repairs.length === 0 ? (
-                          <div className="text-center py-16 text-gray-500">
-                            <div className="bg-gray-100 rounded-full p-6 w-24 h-24 mx-auto mb-4 flex items-center justify-center">
-                              <AlertCircle className="h-12 w-12 opacity-50" />
-                            </div>
-                            <p className="text-lg font-medium mb-2">ยังไม่มีรายการแจ้งซ่อม</p>
-                            <p className="text-sm text-gray-400">เริ่มต้นโดยการแจ้งซ่อมครั้งแรกของคุณ</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                          {repairs.map((repair) => (
-                            <div key={repair.id} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all hover:border-blue-300">
-                              <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-start gap-3">
-                                  <div className="bg-blue-100 p-2 rounded-lg mt-1">
-                                    <AlertCircle className="h-5 w-5 text-blue-600" />
-                                  </div>
-                                  <div>
-                                    <h3 className="font-bold text-lg text-gray-800">
-                                      {repair.teacherName}
-                                    </h3>
-                                    <p className="text-sm text-gray-600 flex items-center gap-1">
-                                      <span>📍</span> {repair.department}
-                                    </p>
-                                  </div>
-                                </div>
-                                <span className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap ${getStatusColor(repair.status)}`}>
-                                  {repair.status}
-                                </span>
-                              </div>
-
-                              <div className="grid md:grid-cols-2 gap-3 mb-4 text-sm bg-gray-50 p-4 rounded-lg">
-                                <div className="text-gray-700">
-                                  <span className="font-semibold">🔧 ประเภท:</span> {repair.problemType}
-                                </div>
-                                <div className="text-gray-700">
-                                  <span className="font-semibold">📞 เบอร์โทร:</span> {repair.phone}
-                                </div>
-                                <div className="text-gray-700">
-                                  <span className="font-semibold">📍 สถานที่:</span> {repair.location}
-                                </div>
-                                <div className="text-gray-700">
-                                  <span className="font-semibold">🕐 แจ้งเมื่อ:</span> {repair.createdAt}
-                                </div>
-                              </div>
-
-                              <div className="bg-blue-50 p-4 rounded-lg mb-4 border-l-4 border-blue-500">
-                                <p className="text-sm text-gray-800 leading-relaxed">
-                                  <span className="font-semibold text-blue-800">📝 ปัญหา:</span> {repair.description}
-                                </p>
-                              </div>
-
-                              {repair.rating && repair.rating.score > 0 && (
-                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200 mb-4">
-                                  <div className="flex items-center gap-2 mb-3">
-                                    <span className="text-sm font-semibold text-green-800">✅ การประเมิน:</span>
-                                    <div className="flex">
-                                      {[1, 2, 3, 4, 5].map((star) => (
-                                        <Star
-                                          key={star}
-                                          className={`h-5 w-5 ${
-                                            star <= repair.rating.score
-                                              ? 'fill-yellow-400 text-yellow-400'
-                                              : 'text-gray-300'
-                                          }`}
-                                        />
-                                      ))}
+                            {repairs.filter(r => r.status === statusFilter).map((repair) => (
+                              <div key={repair.id} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all hover:border-blue-300">
+                                <div className="flex justify-between items-start mb-4">
+                                  <div className="flex items-start gap-3">
+                                    <div className="bg-blue-100 p-2 rounded-lg mt-1">
+                                      <AlertCircle className="h-5 w-5 text-blue-600" />
                                     </div>
-                                    <span className="text-sm font-bold text-green-700">({repair.rating.score}/5)</span>
+                                    <div>
+                                      <h3 className="font-bold text-lg text-gray-800">
+                                        {repair.teacherName}
+                                      </h3>
+                                      <p className="text-sm text-gray-600 flex items-center gap-1">
+                                        <span>📍</span> {repair.department}
+                                      </p>
+                                    </div>
                                   </div>
-                                  {repair.rating.technicianName && (
-                                    <p className="text-sm text-gray-700 mb-2">
-                                      <span className="font-semibold">👨‍🔧 ช่างผู้ซ่อม:</span> {repair.rating.technicianName}
-                                    </p>
+                                  <span className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap ${getStatusColor(repair.status)}`}>
+                                    {repair.status}
+                                  </span>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-3 mb-4 text-sm bg-gray-50 p-4 rounded-lg">
+                                  <div className="text-gray-700">
+                                    <span className="font-semibold">🔧 ประเภท:</span> {repair.problemType}
+                                  </div>
+                                  <div className="text-gray-700">
+                                    <span className="font-semibold">📞 เบอร์โทร:</span> {repair.phone}
+                                  </div>
+                                  <div className="text-gray-700">
+                                    <span className="font-semibold">📍 สถานที่:</span> {repair.location}
+                                  </div>
+                                  <div className="text-gray-700">
+                                    <span className="font-semibold">🕐 แจ้งเมื่อ:</span> {repair.createdAt}
+                                  </div>
+                                </div>
+
+                                <div className="bg-blue-50 p-4 rounded-lg mb-4 border-l-4 border-blue-500">
+                                  <p className="text-sm text-gray-800 leading-relaxed">
+                                    <span className="font-semibold text-blue-800">📝 ปัญหา:</span> {repair.description}
+                                  </p>
+                                </div>
+
+                                {repair.rating && repair.rating.score > 0 && (
+                                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200 mb-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                      <span className="text-sm font-semibold text-green-800">✅ การประเมิน:</span>
+                                      <div className="flex">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                          <Star
+                                            key={star}
+                                            className={`h-5 w-5 ${
+                                              star <= repair.rating.score
+                                                ? 'fill-yellow-400 text-yellow-400'
+                                                : 'text-gray-300'
+                                            }`}
+                                          />
+                                        ))}
+                                      </div>
+                                      <span className="text-sm font-bold text-green-700">({repair.rating.score}/5)</span>
+                                    </div>
+                                    {repair.rating.technicianName && (
+                                      <p className="text-sm text-gray-700 mb-2">
+                                        <span className="font-semibold">👨‍🔧 ช่างผู้ซ่อม:</span> {repair.rating.technicianName}
+                                      </p>
+                                    )}
+                                    {repair.rating.comment && (
+                                      <p className="text-sm text-gray-700 italic bg-white p-3 rounded border border-green-200">
+                                        💬 {repair.rating.comment}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+
+                                <div className="flex gap-2">
+                                  {repair.status === 'รอดำเนินการ' && (
+                                    <button
+                                      onClick={() => updateRepairStatus(repair.id, 'กำลังดำเนินการ')}
+                                      disabled={connectionStatus === 'error'}
+                                      className="flex-1 bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      ▶️ เริ่มดำเนินการ
+                                    </button>
                                   )}
-                                  {repair.rating.comment && (
-                                    <p className="text-sm text-gray-700 italic bg-white p-3 rounded border border-green-200">
-                                      💬 {repair.rating.comment}
-                                    </p>
+                                  {repair.status === 'กำลังดำเนินการ' && (
+                                    <button
+                                      onClick={() => updateRepairStatus(repair.id, 'เสร็จสิ้น')}
+                                      disabled={connectionStatus === 'error'}
+                                      className="flex-1 bg-green-500 text-white py-2.5 px-4 rounded-lg hover:bg-green-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      ✅ เสร็จสิ้น
+                                    </button>
+                                  )}
+                                  {repair.status === 'เสร็จสิ้น' && (!repair.rating || repair.rating.score === 0) && (
+                                    <button
+                                      onClick={() => startRating(repair)}
+                                      className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2.5 px-4 rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all text-sm font-medium shadow-md hover:shadow-lg"
+                                    >
+                                      ⭐ ประเมินการบริการ
+                                    </button>
                                   )}
                                 </div>
-                              )}
-
-                              <div className="flex gap-2">
-                                {repair.status === 'รอดำเนินการ' && (
-                                  <button
-                                    onClick={() => updateRepairStatus(repair.id, 'กำลังดำเนินการ')}
-                                    disabled={connectionStatus === 'error'}
-                                    className="flex-1 bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                  >
-                                    ▶️ เริ่มดำเนินการ
-                                  </button>
-                                )}
-                                {repair.status === 'กำลังดำเนินการ' && (
-                                  <button
-                                    onClick={() => updateRepairStatus(repair.id, 'เสร็จสิ้น')}
-                                    disabled={connectionStatus === 'error'}
-                                    className="flex-1 bg-green-500 text-white py-2.5 px-4 rounded-lg hover:bg-green-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                  >
-                                    ✅ เสร็จสิ้น
-                                  </button>
-                                )}
-                                {repair.status === 'เสร็จสิ้น' && (!repair.rating || repair.rating.score === 0) && (
-                                  <button
-                                    onClick={() => startRating(repair)}
-                                    className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2.5 px-4 rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all text-sm font-medium shadow-md hover:shadow-lg"
-                                  >
-                                    ⭐ ประเมินการบริการ
-                                  </button>
-                                )}
                               </div>
-                            </div>
-                          ))}
+                            ))}
                           </div>
                         )}
                       </div>
                     )}
 
+                    {/* Rating View */}
                     {currentView === 'rating' && (
                       <div className="space-y-6 animate-fadeIn">
                         <div className="text-center bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl">
@@ -907,12 +859,4 @@ const saveRepair = async (repair, action) => {
     root.render(<RepairSystem />);
   </script>
 </body>
-
 </html>
-
-
-
-
-
-
-
