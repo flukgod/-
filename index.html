@@ -42,8 +42,8 @@
 
     // Google Apps Script Web App URL - แทนที่ด้วย URL ของคุณ
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-G8VFLfbSLt05vfmOtSimJyhcFYdiDx4SsykJ6LMm8a5zgNXXAfZrkIKCtFx2wiZw0g/exec';
-    const [currentView, setCurrentView] = userState('home');
-    const [statusFilter, setStatusFilter] = userState('รอดำเนินการ');
+    const [currentView, setCurrentView] = useState('home');
+    const [statusFilter, setStatusFilter] = useState('รอดำเนินการ');
     const [repairs, setRepairs] = useState([]);
     
     const AlertCircle = ({ className }) => (
@@ -909,6 +909,7 @@ const saveRepair = async (repair, action) => {
 </body>
 
 </html>
+
 
 
 
