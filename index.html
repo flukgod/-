@@ -271,6 +271,9 @@
         const repair = repairs.find(r => r.id === repairId);
         if (!repair) return;
 
+        // ป้องกันกดซ้ำ - ถ้ากำลังประมวลผลอยู่แล้ว ให้หยุด
+        if (processingIds.has(repairId)) return;
+
         // เพิ่ม ID ลงในรายการกำลังประมวลผล
         setProcessingIds(prev => new Set([...prev, repairId]));
 
@@ -280,9 +283,17 @@
           completedAt: newStatus === 'เสร็จสิ้น' ? new Date().toLocaleString('th-TH') : repair.completedAt
         };
 
-        // Optimistic update
+        // Optimistic update - เปลี่ยนสถานะทันที
         setRepairs(prev => prev.map(r => r.id === repairId ? updated : r));
 
+        // เปลี่ยนแท็บทันทีถ้าเปลี่ยนสถานะ
+        if (newStatus === 'กำลังดำเนินการ') {
+          setTimeout(() => setStatusFilter('กำลังดำเนินการ'), 300);
+        } else if (newStatus === 'เสร็จสิ้น') {
+          setTimeout(() => setStatusFilter('เสร็จสิ้น'), 300);
+        }
+
+        // ส่งข้อมูลไป Google Sheets ในพื้นหลัง
         const success = await saveRepair(updated, 'update');
         
         // ลบ ID ออกจากรายการกำลังประมวลผล
@@ -295,7 +306,9 @@
         if (!success) {
           // ถ้าไม่สำเร็จ คืนค่ากลับ
           setRepairs(prev => prev.map(r => r.id === repairId ? repair : r));
-          alert('❌ เกิดข้อผิดพลาดในการอัปเดตสถานะ');
+          alert('❌ เกิดข้อผิดพลาดในการอัปเดตสถานะ กรุณาลองใหม่อีกครั้ง');
+          // คืนแท็บกลับ
+          setStatusFilter(repair.status);
         }
       };
 
@@ -788,9 +801,12 @@
                                 )}
 
                                 {isProcessing && (
-                                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3 flex items-center gap-2 animate-pulse">
-                                    <Loader className="h-5 w-5 text-blue-600" />
-                                    <span className="text-sm text-blue-700 font-medium">กำลังอัปเดตสถานะ...</span>
+                                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-3 flex items-center gap-3 animate-pulse shadow-md">
+                                    <div className="h-6 w-6 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                    <div>
+                                      <p className="text-sm text-blue-800 font-bold">✨ กำลังอัปเดตสถานะ...</p>
+                                      <p className="text-xs text-blue-600">กรุณารอสักครู่ ระบบกำลังบันทึกข้อมูล</p>
+                                    </div>
                                   </div>
                                 )}
 
@@ -799,24 +815,34 @@
                                     <button
                                       onClick={() => updateRepairStatus(repair.id, 'กำลังดำเนินการ')}
                                       disabled={connectionStatus === 'error' || isProcessing}
-                                      className="flex-1 bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                      className={`flex-1 bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform ${!isProcessing ? 'hover:scale-105' : ''}`}
                                     >
-                                      {isProcessing ? '⏳ กำลังดำเนินการ...' : '▶️ เริ่มดำเนินการ'}
+                                      {isProcessing ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                          <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                          กำลังเปลี่ยน...
+                                        </span>
+                                      ) : '▶️ เริ่มดำเนินการ'}
                                     </button>
                                   )}
                                   {repair.status === 'กำลังดำเนินการ' && (
                                     <button
                                       onClick={() => updateRepairStatus(repair.id, 'เสร็จสิ้น')}
                                       disabled={connectionStatus === 'error' || isProcessing}
-                                      className="flex-1 bg-green-500 text-white py-2.5 px-4 rounded-lg hover:bg-green-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                      className={`flex-1 bg-green-500 text-white py-2.5 px-4 rounded-lg hover:bg-green-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform ${!isProcessing ? 'hover:scale-105' : ''}`}
                                     >
-                                      {isProcessing ? '⏳ กำลังอัปเดต...' : '✅ เสร็จสิ้น'}
+                                      {isProcessing ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                          <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                          กำลังเปลี่ยน...
+                                        </span>
+                                      ) : '✅ เสร็จสิ้น'}
                                     </button>
                                   )}
                                   {repair.status === 'เสร็จสิ้น' && (!repair.rating || repair.rating.score === 0) && (
                                     <button
                                       onClick={() => startRating(repair)}
-                                      className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2.5 px-4 rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all text-sm font-medium shadow-md hover:shadow-lg"
+                                      className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2.5 px-4 rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105"
                                     >
                                       ⭐ ประเมินการบริการ
                                     </button>
