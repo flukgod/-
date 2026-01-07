@@ -8,54 +8,29 @@
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    #root { min-height: 100vh; }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(-10px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    .animate-fadeIn {
-      animation: fadeIn 0.3s ease-out;
-    }
-    .animate-slideIn {
-      animation: slideIn 0.3s ease-out;
-    }
-    .animate-pulse {
-      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-    }
-    .button-processing {
-      position: relative;
-      pointer-events: none;
-    }
+    #root { min-h-screen; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+    .animate-slideIn { animation: slideIn 0.3s ease-out; }
+    .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    input:focus, select:focus, textarea:focus { outline: none; }
+    .button-processing { position: relative; pointer-events: none; }
     .button-processing::after {
-      content: '';
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      top: 50%;
-      left: 50%;
-      margin-left: -8px;
-      margin-top: -8px;
-      border: 2px solid #ffffff;
-      border-radius: 50%;
-      border-top-color: transparent;
-      animation: spin 0.6s linear infinite;
+      content: ''; position: absolute; width: 16px; height: 16px;
+      top: 50%; left: 50%; margin-left: -8px; margin-top: -8px;
+      border: 2px solid #ffffff; border-radius: 50%;
+      border-top-color: transparent; animation: spin 0.6s linear infinite;
+    }
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
     }
   </style>
 </head>
@@ -63,12 +38,17 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
-    // ⚠️ สำคัญ: แทนที่ URL นี้ด้วย Apps Script URL ของคุณ
+    // ⚠️ แทนที่ URL นี้ด้วย Apps Script URL ของคุณ
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-G8VFLfbSLt05vfmOtSimJyhcFYdiDx4SsykJ6LMm8a5zgNXXAfZrkIKCtFx2wiZw0g/exec';
+    
+    // Cache Configuration
+    const CACHE_KEY = 'repair_cache';
+    const CACHE_DURATION = 60000; // 1 นาที
+    const FILTER_KEY = 'status_filter';
 
-    // SVG Icons
+    // Icons
     const AlertCircle = ({ className }) => (
       <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10"></circle>
@@ -107,17 +87,39 @@
       </svg>
     );
 
-    const Loader = ({ className }) => (
-      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="32">
-          <animate attributeName="stroke-dashoffset" dur="1.5s" values="32;0" repeatCount="indefinite"/>
-        </circle>
-      </svg>
+    // Skeleton Loading Component
+    const SkeletonCard = () => (
+      <div className="bg-white rounded-xl p-5 border border-gray-200">
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex items-start gap-3 flex-1">
+            <div className="skeleton h-12 w-12 rounded-lg"></div>
+            <div className="flex-1">
+              <div className="skeleton h-6 w-48 mb-2 rounded"></div>
+              <div className="skeleton h-4 w-32 rounded"></div>
+            </div>
+          </div>
+          <div className="skeleton h-8 w-24 rounded-full"></div>
+        </div>
+        <div className="grid md:grid-cols-2 gap-3 mb-4">
+          <div className="skeleton h-4 w-full rounded"></div>
+          <div className="skeleton h-4 w-full rounded"></div>
+          <div className="skeleton h-4 w-full rounded"></div>
+          <div className="skeleton h-4 w-full rounded"></div>
+        </div>
+        <div className="skeleton h-20 w-full rounded-lg mb-4"></div>
+        <div className="skeleton h-10 w-full rounded-lg"></div>
+      </div>
     );
 
     function RepairSystem() {
       const [currentView, setCurrentView] = useState('home');
-      const [statusFilter, setStatusFilter] = useState('รอดำเนินการ');
+      const [statusFilter, setStatusFilter] = useState(() => {
+        try {
+          return localStorage.getItem(FILTER_KEY) || 'รอดำเนินการ';
+        } catch {
+          return 'รอดำเนินการ';
+        }
+      });
       const [repairs, setRepairs] = useState([]);
       const [loading, setLoading] = useState(true);
       const [connectionStatus, setConnectionStatus] = useState('connecting');
@@ -139,19 +141,80 @@
         technicianName: ''
       });
 
-      useEffect(() => {
-        loadRepairs();
+      const loadTimeoutRef = useRef(null);
+      const xlsxLoadedRef = useRef(false);
+
+      // Cache Helper Functions
+      const getCache = useCallback(() => {
+        try {
+          const cached = sessionStorage.getItem(CACHE_KEY);
+          if (cached) {
+            const { data, timestamp } = JSON.parse(cached);
+            if (Date.now() - timestamp < CACHE_DURATION) {
+              return data;
+            }
+          }
+        } catch (e) {
+          console.warn('Cache read error:', e);
+        }
+        return null;
       }, []);
 
-      const loadRepairs = async () => {
+      const setCache = useCallback((data) => {
+        try {
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+            data,
+            timestamp: Date.now()
+          }));
+        } catch (e) {
+          console.warn('Cache write error:', e);
+        }
+      }, []);
+
+      // Save filter to localStorage
+      useEffect(() => {
+        try {
+          localStorage.setItem(FILTER_KEY, statusFilter);
+        } catch (e) {
+          console.warn('localStorage write error:', e);
+        }
+      }, [statusFilter]);
+
+      const loadRepairs = useCallback(async (forceRefresh = false) => {
+        // ลองโหลดจาก cache ก่อน (ถ้าไม่ได้บังคับ refresh)
+        if (!forceRefresh) {
+          const cached = getCache();
+          if (cached) {
+            setRepairs(cached.sort((a, b) => b.id - a.id));
+            setConnectionStatus('connected');
+            setLoading(false);
+            return;
+          }
+        }
+
         setLoading(true);
         setErrorMessage('');
+
+        // ตั้งค่า timeout warning
+        if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
         
+        loadTimeoutRef.current = setTimeout(() => {
+          setErrorMessage('⏱️ การโหลดใช้เวลานานกว่าปกติ กรุณารอสักครู่...');
+        }, 8000);
+
         try {
+          // ใช้ AbortController เพื่อ timeout request
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+
           const response = await fetch(SCRIPT_URL, {
             method: 'GET',
-            redirect: 'follow'
+            redirect: 'follow',
+            signal: controller.signal
           });
+
+          clearTimeout(timeoutId);
+          clearTimeout(loadTimeoutRef.current);
 
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -167,24 +230,29 @@
           }
 
           if (Array.isArray(data)) {
-            setRepairs(data.sort((a, b) => b.id - a.id));
+            const sorted = data.sort((a, b) => b.id - a.id);
+            setRepairs(sorted);
+            setCache(sorted); // บันทึกลง cache
             setConnectionStatus('connected');
           } else {
             throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
           }
 
         } catch (error) {
+          clearTimeout(loadTimeoutRef.current);
           console.error('Error loading repairs:', error);
           setConnectionStatus('error');
           
           let message = 'ไม่สามารถโหลดข้อมูลได้';
           
-          if (error.message.includes('Failed to fetch')) {
-            message = 'ไม่สามารถเชื่อมต่อกับ Google Sheets ได้\n\nกรุณาตรวจสอบ:\n1. URL ของ Apps Script ถูกต้องหรือไม่\n2. Apps Script เปิดให้เข้าถึงแบบ "Anyone" หรือไม่\n3. มี Sheet ชื่อ "Sheet1" ใน Google Sheets หรือไม่';
+          if (error.name === 'AbortError') {
+            message = '⏱️ หมดเวลาการเชื่อมต่อ (Timeout)\n\nกรุณา:\n• ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n• ลองใหม่อีกครั้ง';
+          } else if (error.message.includes('Failed to fetch')) {
+            message = '❌ ไม่สามารถเชื่อมต่อกับ Google Sheets\n\n💡 แนะนำ:\n• ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n• ตรวจสอบ URL ของ Apps Script\n• ตรวจสอบสิทธิ์การเข้าถึง (ตั้งเป็น Anyone)';
           } else if (error.message.includes('HTTP error')) {
-            message = `เกิดข้อผิดพลาดจากเซิร์ฟเวอร์: ${error.message}`;
+            message = `⚠️ เซิร์ฟเวอร์ตอบกลับผิดพลาด: ${error.message}`;
           } else {
-            message = `เกิดข้อผิดพลาด: ${error.message}`;
+            message = `⚠️ เกิดข้อผิดพลาด: ${error.message}`;
           }
           
           setErrorMessage(message);
@@ -193,24 +261,44 @@
         } finally {
           setLoading(false);
         }
-      };
+      }, [getCache, setCache]);
+
+      useEffect(() => {
+        loadRepairs();
+        
+        // Auto-refresh ทุก 1 นาที
+        const interval = setInterval(() => {
+          loadRepairs(true); // silent refresh
+        }, 60000);
+        
+        return () => {
+          clearInterval(interval);
+          if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
+        };
+      }, [loadRepairs]);
 
       const saveRepair = async (repair, action) => {
         try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000);
+
           const response = await fetch(SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({
               action: action,
               ...repair
             }),
-            redirect: 'follow'
+            redirect: 'follow',
+            signal: controller.signal
           });
+
+          clearTimeout(timeoutId);
 
           if (!response.ok) {
             return false;
           }
 
-          await loadRepairs();
+          await loadRepairs(true);
           return true;
 
         } catch (error) {
@@ -226,7 +314,14 @@
       const handleSubmit = async () => {
         if (!formData.teacherName || !formData.department || !formData.phone || 
             !formData.problemType || !formData.description || !formData.location) {
-          alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+          alert('⚠️ กรุณากรอกข้อมูลให้ครบถ้วน');
+          return;
+        }
+
+        // ตรวจสอบเบอร์โทรศัพท์
+        const phoneDigits = formData.phone.replace(/[^\d]/g, '');
+        if (phoneDigits.length !== 10) {
+          alert('⚠️ กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก');
           return;
         }
 
@@ -241,7 +336,7 @@
           rating: null
         };
 
-        // Optimistic update - แสดงข้อมูลก่อนส่งไป Google Sheets
+        // Optimistic update
         setRepairs(prev => [newRepair, ...prev]);
         
         const success = await saveRepair(newRepair, 'add');
@@ -261,7 +356,6 @@
           setStatusFilter('รอดำเนินการ');
           setCurrentView('list');
         } else {
-          // ถ้าไม่สำเร็จ ลบข้อมูลที่เพิ่มไว้ออก
           setRepairs(prev => prev.filter(r => r.id !== newRepair.id));
           alert('❌ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
         }
@@ -271,10 +365,8 @@
         const repair = repairs.find(r => r.id === repairId);
         if (!repair) return;
 
-        // ป้องกันกดซ้ำ - ถ้ากำลังประมวลผลอยู่แล้ว ให้หยุด
         if (processingIds.has(repairId)) return;
 
-        // เพิ่ม ID ลงในรายการกำลังประมวลผล
         setProcessingIds(prev => new Set([...prev, repairId]));
 
         const updated = {
@@ -283,20 +375,16 @@
           completedAt: newStatus === 'เสร็จสิ้น' ? new Date().toLocaleString('th-TH') : repair.completedAt
         };
 
-        // Optimistic update - เปลี่ยนสถานะทันที
         setRepairs(prev => prev.map(r => r.id === repairId ? updated : r));
 
-        // เปลี่ยนแท็บทันทีถ้าเปลี่ยนสถานะ
         if (newStatus === 'กำลังดำเนินการ') {
           setTimeout(() => setStatusFilter('กำลังดำเนินการ'), 300);
         } else if (newStatus === 'เสร็จสิ้น') {
           setTimeout(() => setStatusFilter('เสร็จสิ้น'), 300);
         }
 
-        // ส่งข้อมูลไป Google Sheets ในพื้นหลัง
         const success = await saveRepair(updated, 'update');
         
-        // ลบ ID ออกจากรายการกำลังประมวลผล
         setProcessingIds(prev => {
           const newSet = new Set(prev);
           newSet.delete(repairId);
@@ -304,17 +392,15 @@
         });
 
         if (!success) {
-          // ถ้าไม่สำเร็จ คืนค่ากลับ
           setRepairs(prev => prev.map(r => r.id === repairId ? repair : r));
           alert('❌ เกิดข้อผิดพลาดในการอัปเดตสถานะ กรุณาลองใหม่อีกครั้ง');
-          // คืนแท็บกลับ
           setStatusFilter(repair.status);
         }
       };
 
       const handleRatingSubmit = async () => {
         if (ratingData.rating === 0) {
-          alert('กรุณาให้คะแนน');
+          alert('⚠️ กรุณาให้คะแนน');
           return;
         }
 
@@ -335,7 +421,6 @@
           }
         };
 
-        // Optimistic update
         setRepairs(prev => prev.map(r => r.id === ratingData.repairId ? updated : r));
 
         const success = await saveRepair(updated, 'update');
@@ -347,7 +432,6 @@
           alert('✅ ขอบคุณสำหรับการให้คะแนนค่ะ');
           setCurrentView('list');
         } else {
-          // ถ้าไม่สำเร็จ คืนค่ากลับ
           setRepairs(prev => prev.map(r => r.id === ratingData.repairId ? repair : r));
           alert('❌ เกิดข้อผิดพลาดในการบันทึกการประเมิน');
         }
@@ -365,10 +449,30 @@
 
       const exportToExcel = () => {
         if (repairs.length === 0) {
-          alert('ไม่มีข้อมูลให้ Export');
+          alert('⚠️ ไม่มีข้อมูลให้ Export');
           return;
         }
 
+        // Lazy load XLSX library
+        if (xlsxLoadedRef.current || window.XLSX) {
+          performExport();
+        } else {
+          const loadingAlert = alert('📦 กำลังเตรียมการ Export...');
+          
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+          script.onload = () => {
+            xlsxLoadedRef.current = true;
+            performExport();
+          };
+          script.onerror = () => {
+            alert('❌ ไม่สามารถโหลดตัว Export ได้ กรุณาลองใหม่');
+          };
+          document.head.appendChild(script);
+        }
+      };
+
+      const performExport = () => {
         const excelData = repairs.map((repair, index) => ({
           'ลำดับ': index + 1,
           'ชื่อผู้แจ้ง': repair.teacherName,
@@ -413,6 +517,19 @@
         }
       };
 
+      // Memoized filtered repairs
+      const filteredRepairs = useMemo(() => 
+        repairs.filter(r => r.status === statusFilter),
+        [repairs, statusFilter]
+      );
+
+      // Memoized status counts
+      const statusCounts = useMemo(() => ({
+        รอดำเนินการ: repairs.filter(r => r.status === 'รอดำเนินการ').length,
+        กำลังดำเนินการ: repairs.filter(r => r.status === 'กำลังดำเนินการ').length,
+        เสร็จสิ้น: repairs.filter(r => r.status === 'เสร็จสิ้น').length
+      }), [repairs]);
+
       return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
           <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -443,14 +560,14 @@
                       'bg-yellow-400 animate-pulse'
                     }`}></div>
                     <span className="text-blue-100">
-                      {connectionStatus === 'connected' && 'เชื่อมต่อ Google Sheets แล้ว'}
-                      {connectionStatus === 'error' && 'ไม่สามารถเชื่อมต่อ Google Sheets'}
-                      {connectionStatus === 'connecting' && 'กำลังเชื่อมต่อ...'}
+                      {connectionStatus === 'connected' && '🟢 เชื่อมต่อสำเร็จ'}
+                      {connectionStatus === 'error' && '🔴 ไม่สามารถเชื่อมต่อ'}
+                      {connectionStatus === 'connecting' && '🟡 กำลังเชื่อมต่อ...'}
                     </span>
                   </div>
                   {connectionStatus === 'error' && (
                     <button
-                      onClick={loadRepairs}
+                      onClick={() => loadRepairs(true)}
                       className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm transition-all"
                     >
                       <RefreshCw className="h-4 w-4" />
@@ -469,7 +586,7 @@
                       <h3 className="text-sm font-medium text-red-800 mb-1">เกิดข้อผิดพลาด</h3>
                       <p className="text-sm text-red-700 whitespace-pre-line">{errorMessage}</p>
                       <button
-                        onClick={loadRepairs}
+                        onClick={() => loadRepairs(true)}
                         className="mt-3 flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-all"
                       >
                         <RefreshCw className="h-4 w-4" />
@@ -507,9 +624,12 @@
               {/* Content */}
               <div className="p-6">
                 {loading ? (
-                  <div className="text-center py-12">
-                    <div className="inline-block h-8 w-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                    <p className="mt-4 text-gray-600">กำลังโหลดข้อมูลจาก Google Sheets...</p>
+                  <div className="space-y-3">
+                    <SkeletonCard />
+                    <SkeletonCard />
+                    <div className="text-center text-gray-500 text-sm mt-4">
+                      กำลังโหลดข้อมูล...
+                    </div>
                   </div>
                 ) : (
                   <>
@@ -664,7 +784,7 @@
                                 : 'text-gray-600 hover:text-yellow-600 hover:bg-gray-50'
                             }`}
                           >
-                            ⏳ รอดำเนินการ ({repairs.filter(r => r.status === 'รอดำเนินการ').length})
+                            ⏳ รอดำเนินการ ({statusCounts.รอดำเนินการ})
                           </button>
                           <button
                             onClick={() => setStatusFilter('กำลังดำเนินการ')}
@@ -674,7 +794,7 @@
                                 : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
                             }`}
                           >
-                            🔧 กำลังดำเนินการ ({repairs.filter(r => r.status === 'กำลังดำเนินการ').length})
+                            🔧 กำลังดำเนินการ ({statusCounts.กำลังดำเนินการ})
                           </button>
                           <button
                             onClick={() => setStatusFilter('เสร็จสิ้น')}
@@ -684,11 +804,11 @@
                                 : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
                             }`}
                           >
-                            ✅ เสร็จสิ้น ({repairs.filter(r => r.status === 'เสร็จสิ้น').length})
+                            ✅ เสร็จสิ้น ({statusCounts.เสร็จสิ้น})
                           </button>
                         </div>
 
-                        {repairs.filter(r => r.status === statusFilter).length > 0 && (
+                        {filteredRepairs.length > 0 && (
                           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-200">
                             <div className="flex items-center gap-2">
                               <div className="bg-blue-100 p-2 rounded-lg">
@@ -696,7 +816,7 @@
                               </div>
                               <div>
                                 <p className="text-sm font-semibold text-gray-700">
-                                  {statusFilter} {repairs.filter(r => r.status === statusFilter).length} รายการ
+                                  {statusFilter} {filteredRepairs.length} รายการ
                                 </p>
                                 <p className="text-xs text-gray-500">
                                   ทั้งหมด {repairs.length} รายการ
@@ -715,7 +835,7 @@
                           </div>
                         )}
 
-                        {repairs.filter(r => r.status === statusFilter).length === 0 ? (
+                        {filteredRepairs.length === 0 ? (
                           <div className="text-center py-16 text-gray-500">
                             <div className="bg-gray-100 rounded-full p-6 w-24 h-24 mx-auto mb-4 flex items-center justify-center">
                               <AlertCircle className="h-12 w-12 opacity-50" />
@@ -725,7 +845,7 @@
                           </div>
                         ) : (
                           <div className="space-y-3">
-                            {repairs.filter(r => r.status === statusFilter).map((repair) => {
+                            {filteredRepairs.map((repair) => {
                               const isProcessing = processingIds.has(repair.id);
                               return (
                               <div key={repair.id} className={`bg-white rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all hover:border-blue-300 ${isProcessing ? 'opacity-70' : ''}`}>
@@ -935,7 +1055,7 @@
 
                         {isSubmitting && (
                           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3 animate-pulse">
-                            <Loader className="h-6 w-6 text-blue-600" />
+                            <div className="h-6 w-6 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                             <span className="text-blue-700 font-medium">กำลังบันทึกการประเมิน...</span>
                           </div>
                         )}
