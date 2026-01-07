@@ -19,11 +19,43 @@
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
     .animate-fadeIn {
-      animation: fadeIn 0.5s ease-out;
+      animation: fadeIn 0.3s ease-out;
+    }
+    .animate-slideIn {
+      animation: slideIn 0.3s ease-out;
+    }
+    .animate-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
     input:focus, select:focus, textarea:focus {
       outline: none;
+    }
+    .button-processing {
+      position: relative;
+      pointer-events: none;
+    }
+    .button-processing::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 50%;
+      left: 50%;
+      margin-left: -8px;
+      margin-top: -8px;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 0.6s linear infinite;
     }
   </style>
 </head>
@@ -75,6 +107,14 @@
       </svg>
     );
 
+    const Loader = ({ className }) => (
+      <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="32">
+          <animate attributeName="stroke-dashoffset" dur="1.5s" values="32;0" repeatCount="indefinite"/>
+        </circle>
+      </svg>
+    );
+
     function RepairSystem() {
       const [currentView, setCurrentView] = useState('home');
       const [statusFilter, setStatusFilter] = useState('รอดำเนินการ');
@@ -82,6 +122,8 @@
       const [loading, setLoading] = useState(true);
       const [connectionStatus, setConnectionStatus] = useState('connecting');
       const [errorMessage, setErrorMessage] = useState('');
+      const [processingIds, setProcessingIds] = useState(new Set());
+      const [isSubmitting, setIsSubmitting] = useState(false);
       const [formData, setFormData] = useState({
         teacherName: '',
         department: '',
@@ -106,31 +148,23 @@
         setErrorMessage('');
         
         try {
-          console.log('กำลังโหลดข้อมูลจาก:', SCRIPT_URL);
-          
           const response = await fetch(SCRIPT_URL, {
             method: 'GET',
             redirect: 'follow'
           });
-
-          console.log('Response status:', response.status);
 
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
 
           const text = await response.text();
-          console.log('Response text:', text.substring(0, 200));
-
           let data;
+          
           try {
             data = JSON.parse(text);
           } catch (e) {
-            console.error('JSON parse error:', e);
             throw new Error('ไม่สามารถแปลงข้อมูลเป็น JSON ได้');
           }
-
-          console.log('จำนวนข้อมูลที่ได้:', data.length);
 
           if (Array.isArray(data)) {
             setRepairs(data.sort((a, b) => b.id - a.id));
@@ -146,11 +180,7 @@
           let message = 'ไม่สามารถโหลดข้อมูลได้';
           
           if (error.message.includes('Failed to fetch')) {
-            message = 'ไม่สามารถเชื่อมต่อกับ Google Sheets ได้\n\n' +
-                     'กรุณาตรวจสอบ:\n' +
-                     '1. URL ของ Apps Script ถูกต้องหรือไม่\n' +
-                     '2. Apps Script เปิดให้เข้าถึงแบบ "Anyone" หรือไม่\n' +
-                     '3. มี Sheet ชื่อ "Sheet1" ใน Google Sheets หรือไม่';
+            message = 'ไม่สามารถเชื่อมต่อกับ Google Sheets ได้\n\nกรุณาตรวจสอบ:\n1. URL ของ Apps Script ถูกต้องหรือไม่\n2. Apps Script เปิดให้เข้าถึงแบบ "Anyone" หรือไม่\n3. มี Sheet ชื่อ "Sheet1" ใน Google Sheets หรือไม่';
           } else if (error.message.includes('HTTP error')) {
             message = `เกิดข้อผิดพลาดจากเซิร์ฟเวอร์: ${error.message}`;
           } else {
@@ -167,8 +197,6 @@
 
       const saveRepair = async (repair, action) => {
         try {
-          console.log('Sending data:', { action, ...repair });
-
           const response = await fetch(SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({
@@ -178,11 +206,7 @@
             redirect: 'follow'
           });
 
-          console.log('Save response status:', response.status);
-
           if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Save error response:', errorText);
             return false;
           }
 
@@ -191,7 +215,6 @@
 
         } catch (error) {
           console.error('Error saving repair:', error);
-          alert('ไม่สามารถเชื่อมต่อกับ Google Sheets ได้');
           return false;
         }
       };
@@ -207,6 +230,8 @@
           return;
         }
 
+        setIsSubmitting(true);
+
         const newRepair = {
           id: Date.now(),
           ...formData,
@@ -216,7 +241,12 @@
           rating: null
         };
 
+        // Optimistic update - แสดงข้อมูลก่อนส่งไป Google Sheets
+        setRepairs(prev => [newRepair, ...prev]);
+        
         const success = await saveRepair(newRepair, 'add');
+        
+        setIsSubmitting(false);
         
         if (success) {
           setFormData({
@@ -227,11 +257,13 @@
             description: '',
             location: ''
           });
-          alert('บันทึกการแจ้งซ่อมเรียบร้อยแล้ว');
+          alert('✅ บันทึกการแจ้งซ่อมเรียบร้อยแล้ว');
           setStatusFilter('รอดำเนินการ');
           setCurrentView('list');
         } else {
-          alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
+          // ถ้าไม่สำเร็จ ลบข้อมูลที่เพิ่มไว้ออก
+          setRepairs(prev => prev.filter(r => r.id !== newRepair.id));
+          alert('❌ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
         }
       };
 
@@ -239,15 +271,31 @@
         const repair = repairs.find(r => r.id === repairId);
         if (!repair) return;
 
+        // เพิ่ม ID ลงในรายการกำลังประมวลผล
+        setProcessingIds(prev => new Set([...prev, repairId]));
+
         const updated = {
           ...repair,
           status: newStatus,
           completedAt: newStatus === 'เสร็จสิ้น' ? new Date().toLocaleString('th-TH') : repair.completedAt
         };
 
+        // Optimistic update
+        setRepairs(prev => prev.map(r => r.id === repairId ? updated : r));
+
         const success = await saveRepair(updated, 'update');
+        
+        // ลบ ID ออกจากรายการกำลังประมวลผล
+        setProcessingIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(repairId);
+          return newSet;
+        });
+
         if (!success) {
-          alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ');
+          // ถ้าไม่สำเร็จ คืนค่ากลับ
+          setRepairs(prev => prev.map(r => r.id === repairId ? repair : r));
+          alert('❌ เกิดข้อผิดพลาดในการอัปเดตสถานะ');
         }
       };
 
@@ -257,8 +305,13 @@
           return;
         }
 
+        setIsSubmitting(true);
+
         const repair = repairs.find(r => r.id === ratingData.repairId);
-        if (!repair) return;
+        if (!repair) {
+          setIsSubmitting(false);
+          return;
+        }
 
         const updated = {
           ...repair,
@@ -269,14 +322,21 @@
           }
         };
 
+        // Optimistic update
+        setRepairs(prev => prev.map(r => r.id === ratingData.repairId ? updated : r));
+
         const success = await saveRepair(updated, 'update');
+        
+        setIsSubmitting(false);
         
         if (success) {
           setRatingData({ repairId: null, rating: 0, comment: '', technicianName: '' });
-          alert('ขอบคุณสำหรับการให้คะแนนค่ะ');
+          alert('✅ ขอบคุณสำหรับการให้คะแนนค่ะ');
           setCurrentView('list');
         } else {
-          alert('เกิดข้อผิดพลาดในการบันทึกการประเมิน');
+          // ถ้าไม่สำเร็จ คืนค่ากลับ
+          setRepairs(prev => prev.map(r => r.id === ratingData.repairId ? repair : r));
+          alert('❌ เกิดข้อผิดพลาดในการบันทึกการประเมิน');
         }
       };
 
@@ -328,7 +388,7 @@
         const filename = `รายการแจ้งซ่อม_${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}.xlsx`;
 
         XLSX.writeFile(wb, filename);
-        alert('ดาวน์โหลดไฟล์ Excel เรียบร้อยแล้ว');
+        alert('✅ ดาวน์โหลดไฟล์ Excel เรียบร้อยแล้ว');
       };
 
       const getStatusColor = (status) => {
@@ -389,7 +449,7 @@
 
               {/* Error Message */}
               {errorMessage && (
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 m-6 rounded-r-lg">
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 m-6 rounded-r-lg animate-slideIn">
                   <div className="flex items-start">
                     <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
                     <div>
@@ -411,7 +471,7 @@
               <div className="flex border-b">
                 <button
                   onClick={() => setCurrentView('home')}
-                  className={`flex-1 py-3 px-4 font-medium transition-colors ${
+                  className={`flex-1 py-3 px-4 font-medium transition-all ${
                     currentView === 'home'
                       ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                       : 'text-gray-600 hover:bg-gray-50'
@@ -421,7 +481,7 @@
                 </button>
                 <button
                   onClick={() => setCurrentView('list')}
-                  className={`flex-1 py-3 px-4 font-medium transition-colors ${
+                  className={`flex-1 py-3 px-4 font-medium transition-all ${
                     currentView === 'list'
                       ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
                       : 'text-gray-600 hover:bg-gray-50'
@@ -463,7 +523,8 @@
                               name="teacherName"
                               value={formData.teacherName}
                               onChange={handleInputChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                              disabled={isSubmitting}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
                               placeholder="ระบุชื่อ-นามสกุล"
                             />
                           </div>
@@ -478,7 +539,8 @@
                                 name="department"
                                 value={formData.department}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                disabled={isSubmitting}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 placeholder="ระบุหน่วยงาน/แผนก"
                               />
                             </div>
@@ -505,7 +567,8 @@
                                   
                                   setFormData({ ...formData, phone: formatted });
                                 }}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                disabled={isSubmitting}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 placeholder="0xx-xxx-xxxx"
                                 maxLength="12"
                               />
@@ -521,7 +584,8 @@
                                 name="problemType"
                                 value={formData.problemType}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
+                                disabled={isSubmitting}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
                               >
                                 <option value="">เลือกประเภทปัญหา</option>
                                 <option value="คอมพิวเตอร์">🖥️ คอมพิวเตอร์</option>
@@ -541,7 +605,8 @@
                                 name="location"
                                 value={formData.location}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                disabled={isSubmitting}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 placeholder="อาคาร/ห้อง"
                               />
                             </div>
@@ -555,18 +620,19 @@
                               name="description"
                               value={formData.description}
                               onChange={handleInputChange}
+                              disabled={isSubmitting}
                               rows="5"
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
                               placeholder="อธิบายปัญหาที่พบโดยละเอียด เช่น คอมพิวเตอร์เปิดเครื่องไม่ติด, ไวไฟใช้ไม่ได้, Office ใช้งานไม่ได้"
                             />
                           </div>
 
                           <button
                             onClick={handleSubmit}
-                            disabled={connectionStatus === 'error'}
-                            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                            disabled={connectionStatus === 'error' || isSubmitting}
+                            className={`w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${isSubmitting ? 'button-processing' : ''}`}
                           >
-                            {connectionStatus === 'error' ? '⚠️ ไม่สามารถส่งได้ (ไม่เชื่อมต่อ)' : '📤 ส่งแจ้งซ่อม'}
+                            {isSubmitting ? '⏳ กำลังส่งข้อมูล...' : connectionStatus === 'error' ? '⚠️ ไม่สามารถส่งได้ (ไม่เชื่อมต่อ)' : '📤 ส่งแจ้งซ่อม'}
                           </button>
                         </div>
                       </div>
@@ -646,8 +712,10 @@
                           </div>
                         ) : (
                           <div className="space-y-3">
-                            {repairs.filter(r => r.status === statusFilter).map((repair) => (
-                              <div key={repair.id} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all hover:border-blue-300">
+                            {repairs.filter(r => r.status === statusFilter).map((repair) => {
+                              const isProcessing = processingIds.has(repair.id);
+                              return (
+                              <div key={repair.id} className={`bg-white rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all hover:border-blue-300 ${isProcessing ? 'opacity-70' : ''}`}>
                                 <div className="flex justify-between items-start mb-4">
                                   <div className="flex items-start gap-3">
                                     <div className="bg-blue-100 p-2 rounded-lg mt-1">
@@ -719,23 +787,30 @@
                                   </div>
                                 )}
 
+                                {isProcessing && (
+                                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3 flex items-center gap-2 animate-pulse">
+                                    <Loader className="h-5 w-5 text-blue-600" />
+                                    <span className="text-sm text-blue-700 font-medium">กำลังอัปเดตสถานะ...</span>
+                                  </div>
+                                )}
+
                                 <div className="flex gap-2">
                                   {repair.status === 'รอดำเนินการ' && (
                                     <button
                                       onClick={() => updateRepairStatus(repair.id, 'กำลังดำเนินการ')}
-                                      disabled={connectionStatus === 'error'}
+                                      disabled={connectionStatus === 'error' || isProcessing}
                                       className="flex-1 bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                      ▶️ เริ่มดำเนินการ
+                                      {isProcessing ? '⏳ กำลังดำเนินการ...' : '▶️ เริ่มดำเนินการ'}
                                     </button>
                                   )}
                                   {repair.status === 'กำลังดำเนินการ' && (
                                     <button
                                       onClick={() => updateRepairStatus(repair.id, 'เสร็จสิ้น')}
-                                      disabled={connectionStatus === 'error'}
+                                      disabled={connectionStatus === 'error' || isProcessing}
                                       className="flex-1 bg-green-500 text-white py-2.5 px-4 rounded-lg hover:bg-green-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                      ✅ เสร็จสิ้น
+                                      {isProcessing ? '⏳ กำลังอัปเดต...' : '✅ เสร็จสิ้น'}
                                     </button>
                                   )}
                                   {repair.status === 'เสร็จสิ้น' && (!repair.rating || repair.rating.score === 0) && (
@@ -748,7 +823,7 @@
                                   )}
                                 </div>
                               </div>
-                            ))}
+                            )})}
                           </div>
                         )}
                       </div>
@@ -773,7 +848,8 @@
                             type="text"
                             value={ratingData.technicianName}
                             onChange={(e) => setRatingData({...ratingData, technicianName: e.target.value})}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                            disabled={isSubmitting}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
                             placeholder="ระบุชื่อช่างผู้ซ่อม"
                           />
                         </div>
@@ -788,7 +864,8 @@
                                 key={star}
                                 type="button"
                                 onClick={() => setRatingData({...ratingData, rating: star})}
-                                className="transition-transform hover:scale-125 active:scale-110"
+                                disabled={isSubmitting}
+                                className="transition-transform hover:scale-125 active:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <Star
                                   className={`h-14 w-14 ${
@@ -823,25 +900,34 @@
                           <textarea
                             value={ratingData.comment}
                             onChange={(e) => setRatingData({...ratingData, comment: e.target.value})}
+                            disabled={isSubmitting}
                             rows="4"
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
                             placeholder="แสดงความคิดเห็นเกี่ยวกับการให้บริการ (ถ้ามี)"
                           />
                         </div>
 
+                        {isSubmitting && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3 animate-pulse">
+                            <Loader className="h-6 w-6 text-blue-600" />
+                            <span className="text-blue-700 font-medium">กำลังบันทึกการประเมิน...</span>
+                          </div>
+                        )}
+
                         <div className="flex gap-3">
                           <button
                             onClick={() => setCurrentView('list')}
-                            className="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition-all"
+                            disabled={isSubmitting}
+                            className="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             ยกเลิก
                           </button>
                           <button
                             onClick={handleRatingSubmit}
-                            disabled={ratingData.rating === 0 || connectionStatus === 'error'}
+                            disabled={ratingData.rating === 0 || connectionStatus === 'error' || isSubmitting}
                             className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400 transform hover:-translate-y-0.5"
                           >
-                            ✅ ส่งการประเมิน
+                            {isSubmitting ? '⏳ กำลังส่ง...' : '✅ ส่งการประเมิน'}
                           </button>
                         </div>
                       </div>
