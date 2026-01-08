@@ -129,6 +129,7 @@
       const [formData, setFormData] = useState({
         teacherName: '',
         department: '',
+        assetNumber: '',
         phone: '',
         problemType: '',
         description: '',
@@ -181,7 +182,6 @@
       }, [statusFilter]);
 
       const loadRepairs = useCallback(async (forceRefresh = false) => {
-        // ลองโหลดจาก cache ก่อน (ถ้าไม่ได้บังคับ refresh)
         if (!forceRefresh) {
           const cached = getCache();
           if (cached) {
@@ -195,7 +195,6 @@
         setLoading(true);
         setErrorMessage('');
 
-        // ตั้งค่า timeout warning
         if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
         
         loadTimeoutRef.current = setTimeout(() => {
@@ -203,7 +202,6 @@
         }, 8000);
 
         try {
-          // ใช้ AbortController เพื่อ timeout request
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 15000);
 
@@ -232,7 +230,7 @@
           if (Array.isArray(data)) {
             const sorted = data.sort((a, b) => b.id - a.id);
             setRepairs(sorted);
-            setCache(sorted); // บันทึกลง cache
+            setCache(sorted);
             setConnectionStatus('connected');
           } else {
             throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
@@ -266,9 +264,8 @@
       useEffect(() => {
         loadRepairs();
         
-        // Auto-refresh ทุก 1 นาที
         const interval = setInterval(() => {
-          loadRepairs(true); // silent refresh
+          loadRepairs(true);
         }, 60000);
         
         return () => {
@@ -312,13 +309,12 @@
       };
 
       const handleSubmit = async () => {
-        if (!formData.teacherName || !formData.department || !formData.phone || 
-            !formData.problemType || !formData.description || !formData.location) {
+        if (!formData.teacherName || !formData.department || !formData.assetNumber || 
+            !formData.phone || !formData.problemType || !formData.description || !formData.location) {
           alert('⚠️ กรุณากรอกข้อมูลให้ครบถ้วน');
           return;
         }
 
-        // ตรวจสอบเบอร์โทรศัพท์
         const phoneDigits = formData.phone.replace(/[^\d]/g, '');
         if (phoneDigits.length !== 10) {
           alert('⚠️ กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก');
@@ -336,7 +332,6 @@
           rating: null
         };
 
-        // Optimistic update
         setRepairs(prev => [newRepair, ...prev]);
         
         const success = await saveRepair(newRepair, 'add');
@@ -347,6 +342,7 @@
           setFormData({
             teacherName: '',
             department: '',
+            assetNumber: '',
             phone: '',
             problemType: '',
             description: '',
@@ -442,7 +438,7 @@
           repairId: repair.id,
           rating: 0,
           comment: '',
-          technicianName: 'ฟลุ๊ก ศรัณย์ภัทร'
+          technicianName: 'ฟลุ๊ค ศรัดย์ภัทร'
         });
         setCurrentView('rating');
       };
@@ -453,12 +449,9 @@
           return;
         }
 
-        // Lazy load XLSX library
         if (xlsxLoadedRef.current || window.XLSX) {
           performExport();
         } else {
-          const loadingAlert = alert('📦 กำลังเตรียมการ Export...');
-          
           const script = document.createElement('script');
           script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
           script.onload = () => {
@@ -477,6 +470,7 @@
           'ลำดับ': index + 1,
           'ชื่อผู้แจ้ง': repair.teacherName,
           'หน่วยงาน': repair.department,
+          'หมายเลขครุภัณฑ์': repair.assetNumber,
           'เบอร์โทร': repair.phone,
           'ประเภทปัญหา': repair.problemType,
           'สถานที่': repair.location,
@@ -493,7 +487,7 @@
         const ws = XLSX.utils.json_to_sheet(excelData);
 
         const colWidths = [
-          { wch: 8 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, 
+          { wch: 8 }, { wch: 20 }, { wch: 20 }, { wch: 18 }, { wch: 15 }, 
           { wch: 20 }, { wch: 20 }, { wch: 40 }, { wch: 15 },
           { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 40 }
         ];
@@ -517,13 +511,11 @@
         }
       };
 
-      // Memoized filtered repairs
       const filteredRepairs = useMemo(() => 
         repairs.filter(r => r.status === statusFilter),
         [repairs, statusFilter]
       );
 
-      // Memoized status counts
       const statusCounts = useMemo(() => ({
         รอดำเนินการ: repairs.filter(r => r.status === 'รอดำเนินการ').length,
         กำลังดำเนินการ: repairs.filter(r => r.status === 'กำลังดำเนินการ').length,
@@ -662,50 +654,63 @@
                             />
                           </div>
 
-                          <div className="grid md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                🏢 แผนก/หน่วยงาน <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="text"
-                                name="department"
-                                value={formData.department}
-                                onChange={handleInputChange}
-                                disabled={isSubmitting}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-                                placeholder="ระบุแผนก/หน่วยงาน"
-                              />
-                            </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              🏢 แผนก/หน่วยงาน <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              name="department"
+                              value={formData.department}
+                              onChange={handleInputChange}
+                              disabled={isSubmitting}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                              placeholder="ระบุแผนก/หน่วยงาน"
+                            />
+                          </div>
 
-                            <div>
-                              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                📞 เบอร์โทรศัพท์ <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="tel"
-                                name="phone"
-                                value={formData.phone}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  const numbers = value.replace(/[^\d]/g, '');
-                                  const limited = numbers.slice(0, 10);
-                                  
-                                  let formatted = limited;
-                                  if (limited.length > 6) {
-                                    formatted = limited.slice(0, 3) + '-' + limited.slice(3, 6) + '-' + limited.slice(6);
-                                  } else if (limited.length > 3) {
-                                    formatted = limited.slice(0, 3) + '-' + limited.slice(3);
-                                  }
-                                  
-                                  setFormData({ ...formData, phone: formatted });
-                                }}
-                                disabled={isSubmitting}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-                                placeholder="xxx-xxx-xxxx"
-                                maxLength="12"
-                              />
-                            </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              🔢 หมายเลขครุภัณฑ์ <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              name="assetNumber"
+                              value={formData.assetNumber}
+                              onChange={handleInputChange}
+                              disabled={isSubmitting}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                              placeholder="ระบุหมายเลขครุภัณฑ์ เช่น 417-64-0001"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              📞 เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="tel"
+                              name="phone"
+                              value={formData.phone}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                const numbers = value.replace(/[^\d]/g, '');
+                                const limited = numbers.slice(0, 10);
+                                
+                                let formatted = limited;
+                                if (limited.length > 6) {
+                                  formatted = limited.slice(0, 3) + '-' + limited.slice(3, 6) + '-' + limited.slice(6);
+                                } else if (limited.length > 3) {
+                                  formatted = limited.slice(0, 3) + '-' + limited.slice(3);
+                                }
+                                
+                                setFormData({ ...formData, phone: formatted });
+                              }}
+                              disabled={isSubmitting}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                              placeholder="xxx-xxx-xxxx"
+                              maxLength="12"
+                            />
                           </div>
 
                           <div className="grid md:grid-cols-2 gap-4">
@@ -858,7 +863,7 @@
                                         {repair.teacherName}
                                       </h3>
                                       <p className="text-sm text-gray-600 flex items-center gap-1">
-                                        <span>📍</span> {repair.department}
+                                        <span>🏢</span> {repair.department}
                                       </p>
                                     </div>
                                   </div>
@@ -872,12 +877,15 @@
                                     <span className="font-semibold">🔧 ประเภท:</span> {repair.problemType}
                                   </div>
                                   <div className="text-gray-700">
+                                    <span className="font-semibold">🔢 ครุภัณฑ์:</span> {repair.assetNumber}
+                                  </div>
+                                  <div className="text-gray-700">
                                     <span className="font-semibold">📞 เบอร์โทร:</span> {repair.phone}
                                   </div>
                                   <div className="text-gray-700">
                                     <span className="font-semibold">📍 สถานที่:</span> {repair.location}
                                   </div>
-                                  <div className="text-gray-700">
+                                  <div className="text-gray-700 col-span-2">
                                     <span className="font-semibold">🕐 แจ้งเมื่อ:</span> {repair.createdAt}
                                   </div>
                                 </div>
@@ -1091,4 +1099,3 @@
   </script>
 </body>
 </html>
-
