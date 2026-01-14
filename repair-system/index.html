@@ -5,8 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบแจ้งซ่อมคอมพิวเตอร์และอุปกรณ์</title>
   
-  <!-- Tailwind CSS - ใช้เวอร์ชัน Play CDN -->
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // ซ่อน warning ของ Tailwind
+    tailwind.config = {
+      theme: {
+        extend: {}
+      }
+    }
+  </script>
   
   <!-- Custom Styles -->
   <link rel="stylesheet" href="styles.css">
@@ -15,13 +23,13 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   
-  <!-- Babel Standalone - สำคัญมาก! -->
+  <!-- Babel Standalone -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
   <div id="root"></div>
   
-  <!-- Main Application Script - ต้องใช้ type="text/babel" -->
+  <!-- Main Application Script -->
   <script type="text/babel" src="app.js"></script>
 </body>
 </html>
