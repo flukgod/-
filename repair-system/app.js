@@ -875,48 +875,48 @@ function RepairSystem() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          🔢 หมายเลขครุภัณฑ์ <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="assetNumber"
-                          value={formData.assetNumber}
-                          onChange={handleInputChange}
-                          disabled={isSubmitting}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-                          placeholder="เช่น 417-64-0001"
-                        />
-                      </div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      🔢 หมายเลขครุภัณฑ์ <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="assetNumber"
+                      value={formData.assetNumber}
+                      onChange={handleInputChange}
+                      disabled={isSubmitting}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      placeholder="เช่น 417-64-0001"
+                    />
+                  </div>
 
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          📞 เบอร์โทรศัพท์ <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            const numbers = value.replace(/[^\d]/g, '');
-                            const limited = numbers.slice(0, 10);
-                            
-                            let formatted = limited;
-                            if (limited.length > 6) {
-                              formatted = limited.slice(0, 3) + '-' + limited.slice(3, 6) + '-' + limited.slice(6);
-                            } else if (limited.length > 3) {
-                              formatted = limited.slice(0, 3) + '-' + limited.slice(3);
-                            }
-                            
-                            setFormData({ ...formData, phone: formatted });
-                          }}
-                          disabled={isSubmitting}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-                          placeholder="xxx-xxx-xxxx"
-                          maxLength="12"
-                        />
-                      </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      📞 เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const numbers = value.replace(/[^\d]/g, '');
+                        const limited = numbers.slice(0, 10);
+                        
+                        let formatted = limited;
+                        if (limited.length > 6) {
+                          formatted = limited.slice(0, 3) + '-' + limited.slice(3, 6) + '-' + limited.slice(6);
+                        } else if (limited.length > 3) {
+                          formatted = limited.slice(0, 3) + '-' + limited.slice(3);
+                        }
+                        
+                        setFormData({ ...formData, phone: formatted });
+                      }}
+                      disabled={isSubmitting}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      placeholder="xxx-xxx-xxxx"
+                      maxLength="12"
+                    />
+                  </div>
 
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
