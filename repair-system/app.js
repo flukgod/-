@@ -235,14 +235,8 @@ function RepairSystem() {
   }, [getCache, setCache]);
 
   useEffect(() => {
-    loadRepairs();
-    
-    const interval = setInterval(() => {
-      loadRepairs(true);
-    }, 60000);
-    
+    loadRepairs();  
     return () => {
-      clearInterval(interval);
       if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
     };
   }, [loadRepairs]);
