@@ -1027,7 +1027,7 @@ function RepairSystem() {
 
 // Render App
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<RepairSystem />); transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+root.render(<RepairSystem />);
                           placeholder="ระบุชื่อ-นามสกุล"
                         />
                       </div>
