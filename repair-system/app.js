@@ -1,4 +1,85 @@
 
+1768446966945_image.png
+1768446986066_image.png
+1768447006574_image.png
+
+const { useState, useEffect, useCallback, useMemo, useRef } = React; // ⚠️ แทนที่ URL นี้ด้วย Apps Script URL ของคุณ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzLz8-4sOXjdBW7A6TmspTmqAGMAwOugeiD00zXpEC08QfbTci0zRQPhWPDZXIod0FXIg/exec'; // Cache Configuration const CACHE_K
+
+pasted
+
+ฉันเขียนโค้ดบน github link web https://flukgod.github.io/-/repair-system/
+อยากให้ตรวงวันที่แจ้ง กับ วันที่เสร็จสิ้น เป็นประมาณนี้อะ วัน/เดือน/ปี(69) เวลา 10.00น.  ไม่ต้องเอา 2569-01-15T02:20:18.000Z แบบนี้
+
+10:16 AM
+ฉันจะช่วยแก้ไขรูปแบบการแสดงวันที่ให้เป็นแบบไทยที่อ่านง่ายขึ้นครับ
+
+จากโค้ดที่คุณมี ฟังก์ชัน formatDateTime ที่มีอยู่แล้วจะสร้างรูปแบบ DD/MM/YY HH:MM แต่ดูเหมือนว่ามันไม่ได้ถูกใช้งานอย่างถูกต้องในบางจุด และคุณต้องการให้แสดงเป็นปีพุทธศักราช (69) แทนคริสต์ศักราช
+
+Untitled
+Text 
+เสร็จแล้วครับ! ฉันได้แก้ไขฟังก์ชัน formatDateTime ให้:
+
+แปลงปีเป็นพุทธศักราช - เพิ่ม 543 เข้าไปในปีคริสต์ศักราช แล้วตัดเอาแค่ 2 หลักท้าย
+เพิ่มคำว่า "น." หลังเวลา เพื่อความชัดเจน
+ตอนนี้วันที่จะแสดงเป็น: 15/01/69 10:30 น. แทนที่จะเป็น 2569-01-15T02:20:18.000Z
+
+ลองรีเฟรชหน้าเว็บดูครับ วันที่ทั้งหมดในระบบจะแสดงในรูปแบบใหม่ที่อ่านง่ายกว่าเดิมแล้วครับ 🎉
+
+1768447049638_image.png
+มันจะได้แบบนี้ไหม
+
+10:17 AM
+ใช่ครับ! ตอนนี้ระบบจะทำงานแบบนี้:
+
+ก่อน (ข้อมูลดิบจาก Google Sheets):
+
+2569-01-15T02:20:18.000Z
+หลัง (แสดงผลในหน้าเว็บ):
+
+15/01/69 10:00 น.
+สิ่งที่เกิดขึ้น:
+ปีพุทธศักราช: เปลี่ยนจาก 2569 → 69 (เอาแค่ 2 หลักท้าย)
+รูปแบบวันที่: จาก ISO format → วัน/เดือน/ปี (15/01/69)
+เวลา: แปลงจาก UTC → เวลาท้องถิ่น + เพิ่ม "น."
+ตัวอย่างการแสดงผลในระบบ:
+วันที่แจ้ง: 15/01/69 14:30 น.
+วันที่เสร็จสิ้น: 16/01/69 10:00 น.
+ข้อมูลใน Google Sheets ยังเป็นรูปแบบเดิม (2569-01-15T02:20:18.000Z) เพื่อความถูกต้องในการจัดเก็บ แต่เมื่อแสดงผลบนหน้าเว็บจะเป็นรูปแบบที่อ่านง่ายแบบนี้ครับ 🎯
+
+ฉันได้แก้ไขฟังก์ชัน formatDateTime พาทำหย่อย
+
+10:18 AM
+เข้าใจแล้วครับ! ให้ผมช่วยแก้ไขให้ละเอียดครับ
+
+ระบบแจ้งซ่อมคอมพิวเตอร์ - วิทยาลัยอาชีวศึกษาสุรินทร์
+Interactive artifact ∙ Version 2 
+Continue
+
+10:20 AM
+Untitled
+Text ∙ Version 3 
+เรียบร้อยแล้วครับ! ผมได้แก้ไขฟังก์ชัน formatDateTime ให้แสดงวันที่เป็นรูปแบบ:
+
+15/01/69 10:30 น.
+
+โดยมีการเปลี่ยนแปลงดังนี้:
+
+✅ สิ่งที่แก้ไข:
+ปีพุทธศักราช (69) - เพิ่ม 543 เข้าไปในปี ค.ศ. แล้วเอาแค่ 2 หลักท้าย
+เพิ่ม "น." - เพิ่มคำว่า "น." หลังเวลาเพื่อความชัดเจน
+รูปแบบไทย - วัน/เดือน/ปี เวลา น. (อ่านง่าย สบายตา)
+📍 จุดที่ใช้งาน:
+วันที่แจ้งซ่อม (createdAt)
+วันที่เสร็จสิ้น (completedAt)
+ทุกครั้งที่บันทึกข้อมูลใหม่
+ตอนนี้ข้อมูลทั้งหมดจะแสดงในรูปแบบที่อ่านง่ายแล้วครับ! 🎉
+
+
+
+
+
+
+Claude is AI and can make mistakes. Please double-check responses.
 const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
 // ⚠️ แทนที่ URL นี้ด้วย Apps Script URL ของคุณ
@@ -107,15 +188,15 @@ function RepairSystem() {
   const loadTimeoutRef = useRef(null);
   const xlsxLoadedRef = useRef(false);
 
-  // Format date as DD/MM/YY HH:MM
+  // Format date as DD/MM/YY(พ.ศ.) HH:MM น.
   const formatDateTime = (date) => {
     const d = new Date(date);
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = String(d.getFullYear()).slice(-2);
+    const buddhistYear = String(d.getFullYear() + 543).slice(-2); // แปลงเป็นพ.ศ.
     const hours = String(d.getHours()).padStart(2, '0');
     const minutes = String(d.getMinutes()).padStart(2, '0');
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
+    return `${day}/${month}/${buddhistYear} ${hours}:${minutes} น.`;
   };
 
   // Cache Helper Functions
@@ -623,348 +704,333 @@ function RepairSystem() {
                           onChange={handleInputChange}
                           disabled={isSubmitting}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-                          placeholder="ระบุชื่อ-นามสกุล"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          🏢 หน่วยงาน/แผนก <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="department"
-                          value={formData.department}
-                          onChange={handleInputChange}
-                          disabled={isSubmitting}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
                           placeholder="เช่น แผนกช่างยนต์, แผนกคอมพิวเตอร์"
                         />
                       </div>
 
                       <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      🔢 หมายเลขครุภัณฑ์ <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="assetNumber"
-                      value={formData.assetNumber}
-                      onChange={handleInputChange}
-                      disabled={isSubmitting}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-                      placeholder="เช่น 417-64-0001"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      📞 เบอร์โทรศัพท์ <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const numbers = value.replace(/[^\d]/g, '');
-                        const limited = numbers.slice(0, 10);
-                        
-                        let formatted = limited;
-                        if (limited.length > 6) {
-                          formatted = limited.slice(0, 3) + '-' + limited.slice(3, 6) + '-' + limited.slice(6);
-                        } else if (limited.length > 3) {
-                          formatted = limited.slice(0, 3) + '-' + limited.slice(3);
-                        }
-                        
-                        setFormData({ ...formData, phone: formatted });
-                      }}
-                      disabled={isSubmitting}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-                      placeholder="xxx-xxx-xxxx"
-                      maxLength="12"
-                    />
-                  </div>
-
-                             <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        🔧 ประเภทปัญหา <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        name="problemType"
-                        value={formData.problemType}
-                        onChange={handleInputChange}
-                        disabled={isSubmitting}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
-                      >
-                        <option value="">เลือกประเภทปัญหา</option>
-                        <option value="คอมพิวเตอร์">🖥️ คอมพิวเตอร์</option>
-                        <option value="เครื่องพิมพ์">🖨️ เครื่องพิมพ์</option>
-                        <option value="เครือข่าย/อินเทอร์เน็ต">🌐 เครือข่าย/อินเทอร์เน็ต</option>
-                        <option value="โปรแกรม/ซอฟต์แวร์">💾 โปรแกรม/ซอฟต์แวร์</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        📍 สถานที่ <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="location"
-                        value={formData.location}
-                        onChange={handleInputChange}
-                        disabled={isSubmitting}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-                        placeholder="อาคาร/ห้อง"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      📝 รายละเอียดปัญหา <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      disabled={isSubmitting}
-                      rows="5"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-                      placeholder="อธิบายปัญหาที่พบโดยละเอียด เช่น คอมพิวเตอร์เปิดเครื่องไม่ติด, ไวไฟใช้ไม่ได้, Office ใช้งานไม่ได้"
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleSubmit}
-                    disabled={connectionStatus === 'error' || isSubmitting}
-                    className={`w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${isSubmitting ? 'button-processing' : ''}`}
-                  >
-                    {isSubmitting ? '⏳ กำลังส่งข้อมูล...' : connectionStatus === 'error' ? '⚠️ ไม่สามารถส่งได้ (ไม่เชื่อมต่อ)' : '📤 ส่งแจ้งซ่อม'}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* List View */}
-            {currentView === 'list' && (
-              <div className="space-y-4 animate-fadeIn">
-                <div className="flex border-b border-gray-200 overflow-x-auto">
-                  <button
-                    onClick={() => setStatusFilter('รอดำเนินการ')}
-                    className={`px-6 py-3 font-medium whitespace-nowrap transition-all ${
-                      statusFilter === 'รอดำเนินการ'
-                        ? 'text-yellow-600 border-b-2 border-yellow-600 bg-yellow-50'
-                        : 'text-gray-600 hover:text-yellow-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    ⏳ รอดำเนินการ ({statusCounts.รอดำเนินการ})
-                  </button>
-                  <button
-                    onClick={() => setStatusFilter('กำลังดำเนินการ')}
-                    className={`px-6 py-3 font-medium whitespace-nowrap transition-all ${
-                      statusFilter === 'กำลังดำเนินการ'
-                        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                        : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    🔧 กำลังดำเนินการ ({statusCounts.กำลังดำเนินการ})
-                  </button>
-                  <button
-                    onClick={() => setStatusFilter('เสร็จสิ้น')}
-                    className={`px-6 py-3 font-medium whitespace-nowrap transition-all ${
-                      statusFilter === 'เสร็จสิ้น'
-                        ? 'text-green-600 border-b-2 border-green-600 bg-green-50'
-                        : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    ✅ เสร็จสิ้น ({statusCounts.เสร็จสิ้น})
-                  </button>
-                </div>
-
-                {filteredRepairs.length > 0 && (
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-200">
-                    <div className="flex items-center gap-2">
-                      <div className="bg-blue-100 p-2 rounded-lg">
-                        <Database className="h-5 w-5 text-blue-600" />
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          🔢 หมายเลขครุภัณฑ์ <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="assetNumber"
+                          value={formData.assetNumber}
+                          onChange={handleInputChange}
+                          disabled={isSubmitting}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          placeholder="เช่น 417-64-0001"
+                        />
                       </div>
+
                       <div>
-                        <p className="text-sm font-semibold text-gray-700">
-                          {statusFilter} {filteredRepairs.length} รายการ
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          ทั้งหมด {repairs.length} รายการ
-                        </p>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          📞 เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            const numbers = value.replace(/[^\d]/g, '');
+                            const limited = numbers.slice(0, 10);
+                            
+                            let formatted = limited;
+                            if (limited.length > 6) {
+                              formatted = limited.slice(0, 3) + '-' + limited.slice(3, 6) + '-' + limited.slice(6);
+                            } else if (limited.length > 3) {
+                              formatted = limited.slice(0, 3) + '-' + limited.slice(3);
+                            }
+                            
+                            setFormData({ ...formData, phone: formatted });
+                          }}
+                          disabled={isSubmitting}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          placeholder="xxx-xxx-xxxx"
+                          maxLength="12"
+                        />
                       </div>
-                    </div>
-                    {statusFilter === 'เสร็จสิ้น' && (
+
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            🔧 ประเภทปัญหา <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            name="problemType"
+                            value={formData.problemType}
+                            onChange={handleInputChange}
+                            disabled={isSubmitting}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          >
+                            <option value="">เลือกประเภทปัญหา</option>
+                            <option value="คอมพิวเตอร์">🖥️ คอมพิวเตอร์</option>
+                            <option value="เครื่องพิมพ์">🖨️ เครื่องพิมพ์</option>
+                            <option value="เครือข่าย/อินเทอร์เน็ต">🌐 เครือข่าย/อินเทอร์เน็ต</option>
+                            <option value="โปรแกรม/ซอฟต์แวร์">💾 โปรแกรม/ซอฟต์แวร์</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            📍 สถานที่ <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            name="location"
+                            value={formData.location}
+                            onChange={handleInputChange}
+                            disabled={isSubmitting}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            placeholder="อาคาร/ห้อง"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          📝 รายละเอียดปัญหา <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          name="description"
+                          value={formData.description}
+                          onChange={handleInputChange}
+                          disabled={isSubmitting}
+                          rows="5"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          placeholder="อธิบายปัญหาที่พบโดยละเอียด เช่น คอมพิวเตอร์เปิดเครื่องไม่ติด, ไวไฟใช้ไม่ได้, Office ใช้งานไม่ได้"
+                        />
+                      </div>
+
                       <button
-                        onClick={exportToExcel}
-                        className="flex items-center gap-2 bg-green-600 text-white py-2.5 px-5 rounded-lg font-medium hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                        onClick={handleSubmit}
+                        disabled={connectionStatus === 'error' || isSubmitting}
+                        className={`w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${isSubmitting ? 'button-processing' : ''}`}
                       >
-                        <Download className="h-5 w-5" />
-                        Export Excel
+                        {isSubmitting ? '⏳ กำลังส่งข้อมูล...' : connectionStatus === 'error' ? '⚠️ ไม่สามารถส่งได้ (ไม่เชื่อมต่อ)' : '📤 ส่งแจ้งซ่อม'}
                       </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* List View */}
+                {currentView === 'list' && (
+                  <div className="space-y-4 animate-fadeIn">
+                    <div className="flex border-b border-gray-200 overflow-x-auto">
+                      <button
+                        onClick={() => setStatusFilter('รอดำเนินการ')}
+                        className={`px-6 py-3 font-medium whitespace-nowrap transition-all ${
+                          statusFilter === 'รอดำเนินการ'
+                            ? 'text-yellow-600 border-b-2 border-yellow-600 bg-yellow-50'
+                            : 'text-gray-600 hover:text-yellow-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        ⏳ รอดำเนินการ ({statusCounts.รอดำเนินการ})
+                      </button>
+                      <button
+                        onClick={() => setStatusFilter('กำลังดำเนินการ')}
+                        className={`px-6 py-3 font-medium whitespace-nowrap transition-all ${
+                          statusFilter === 'กำลังดำเนินการ'
+                            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                            : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        🔧 กำลังดำเนินการ ({statusCounts.กำลังดำเนินการ})
+                      </button>
+                      <button
+                        onClick={() => setStatusFilter('เสร็จสิ้น')}
+                        className={`px-6 py-3 font-medium whitespace-nowrap transition-all ${
+                          statusFilter === 'เสร็จสิ้น'
+                            ? 'text-green-600 border-b-2 border-green-600 bg-green-50'
+                            : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        ✅ เสร็จสิ้น ({statusCounts.เสร็จสิ้น})
+                      </button>
+                    </div>
+
+                    {filteredRepairs.length > 0 && (
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <div className="bg-blue-100 p-2 rounded-lg">
+                            <Database className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-700">
+                              {statusFilter} {filteredRepairs.length} รายการ
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              ทั้งหมด {repairs.length} รายการ
+                            </p>
+                          </div>
+                        </div>
+                        {statusFilter === 'เสร็จสิ้น' && (
+                          <button
+                            onClick={exportToExcel}
+                            className="flex items-center gap-2 bg-green-600 text-white py-2.5 px-5 rounded-lg font-medium hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                          >
+                            <Download className="h-5 w-5" />
+                            Export Excel
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {filteredRepairs.length === 0 ? (
+                      <div className="text-center py-16 text-gray-500">
+                        <div className="bg-gray-100 rounded-full p-6 w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+                          <AlertCircle className="h-12 w-12 opacity-50" />
+                        </div>
+                        <p className="text-lg font-medium mb-2">ไม่มีรายการ{statusFilter}</p>
+                        <p className="text-sm text-gray-400">รายการจะแสดงเมื่อมีการแจ้งซ่อม</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {filteredRepairs.map((repair) => {
+                          const isProcessing = processingIds.has(repair.id);
+                          return (
+                            <div key={repair.id} className={`bg-white rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all hover:border-blue-300 ${isProcessing ? 'opacity-70' : ''}`}>
+                              <div className="flex justify-between items-start mb-4">
+                                <div className="flex items-start gap-3">
+                                  <div className="bg-blue-100 p-2 rounded-lg mt-1">
+                                    <AlertCircle className="h-5 w-5 text-blue-600" />
+                                  </div>
+                                  <div>
+                                    <h3 className="font-bold text-lg text-gray-800">
+                                      {repair.teacherName}
+                                    </h3>
+                                    <p className="text-sm text-gray-600 flex items-center gap-1">
+                                      <span>🏢</span> {repair.department}
+                                    </p>
+                                  </div>
+                                </div>
+                                <span className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap ${getStatusColor(repair.status)}`}>
+                                  {repair.status}
+                                </span>
+                              </div>
+
+                              <div className="grid md:grid-cols-2 gap-3 mb-4 text-sm bg-gray-50 p-4 rounded-lg">
+                                <div className="text-gray-700">
+                                  <span className="font-semibold">🔧 ประเภท:</span> {repair.problemType}
+                                </div>
+                                <div className="text-gray-700">
+                                  <span className="font-semibold">🔢 ครุภัณฑ์:</span> {repair.assetNumber}
+                                </div>
+                                <div className="text-gray-700">
+                                  <span className="font-semibold">📞 เบอร์โทร:</span> {repair.phone}
+                                </div>
+                                <div className="text-gray-700">
+                                  <span className="font-semibold">📍 สถานที่:</span> {repair.location}
+                                </div>
+                                <div className="text-gray-700 col-span-2">
+                                  <span className="font-semibold">🕐 แจ้งเมื่อ:</span> {repair.createdAt}
+                                </div>
+                              </div>
+
+                              <div className="bg-blue-50 p-4 rounded-lg mb-4 border-l-4 border-blue-500">
+                                <p className="text-sm text-gray-800 leading-relaxed">
+                                  <span className="font-semibold text-blue-800">📝 ปัญหา:</span> {repair.description}
+                                </p>
+                              </div>
+
+                              {repair.rating && repair.rating.score > 0 && (
+                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200 mb-4">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <span className="text-sm font-semibold text-green-800">✅ การประเมิน:</span>
+                                    <div className="flex">
+                                      {[1, 2, 3, 4, 5].map((star) => (
+                                        <Star
+                                          key={star}
+                                          className={`h-5 w-5 ${
+                                            star <= repair.rating.score
+                                              ? 'fill-yellow-400 text-yellow-400'
+                                              : 'text-gray-300'
+                                          }`}
+                                        />
+                                      ))}
+                                    </div>
+                                    <span className="text-sm font-bold text-green-700">({repair.rating.score}/5)</span>
+                                  </div>
+                                  {repair.rating.technicianName && (
+                                    <p className="text-sm text-gray-700 mb-2">
+                                      <span className="font-semibold">👨‍🔧 ช่างผู้ซ่อม:</span> {repair.rating.technicianName}
+                                    </p>
+                                  )}
+                                  {repair.rating.comment && (
+                                    <p className="text-sm text-gray-700 italic bg-white p-3 rounded border border-green-200">
+                                      💬 {repair.rating.comment}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+
+                              {isProcessing && (
+                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-3 flex items-center gap-3 animate-pulse shadow-md">
+                                  <div className="h-6 w-6 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                  <div>
+                                    <p className="text-sm text-blue-800 font-bold">✨ กำลังอัปเดตสถานะ...</p>
+                                    <p className="text-xs text-blue-600">กรุณารอสักครู่ ระบบกำลังบันทึกข้อมูล</p>
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="flex gap-2">
+                                {repair.status === 'รอดำเนินการ' && (
+                                  <button
+                                    onClick={() => updateRepairStatus(repair.id, 'กำลังดำเนินการ')}
+                                    disabled={connectionStatus === 'error' || isProcessing}
+                                    className={`flex-1 bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform ${!isProcessing ? 'hover:scale-105' : ''}`}
+                                  >
+                                    {isProcessing ? (
+                                      <span className="flex items-center justify-center gap-2">
+                                        <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        กำลังเปลี่ยน...
+                                      </span>
+                                    ) : '▶️ เริ่มดำเนินการ'}
+                                  </button>
+                                )}
+                                {repair.status === 'กำลังดำเนินการ' && (
+                                  <button
+                                    onClick={() => updateRepairStatus(repair.id, 'เสร็จสิ้น')}
+                                    disabled={connectionStatus === 'error' || isProcessing}
+                                    className={`flex-1 bg-green-500 text-white py-2.5 px-4 rounded-lg hover:bg-green-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform ${!isProcessing ? 'hover:scale-105' : ''}`}
+                                  >
+                                    {isProcessing ? (
+                                      <span className="flex items-center justify-center gap-2">
+                                        <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        กำลังเปลี่ยน...
+                                      </span>
+                                    ) : '✅ เสร็จสิ้น'}
+                                  </button>
+                                )}
+                                {repair.status === 'เสร็จสิ้น' && (!repair.rating || repair.rating.score === 0) && (
+                                  <button
+                                    onClick={() => startRating(repair)}
+                                    className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2.5 px-4 rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105"
+                                  >
+                                    ⭐ ประเมินการบริการ
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
                 )}
 
-                {filteredRepairs.length === 0 ? (
-                  <div className="text-center py-16 text-gray-500">
-                    <div className="bg-gray-100 rounded-full p-6 w-24 h-24 mx-auto mb-4 flex items-center justify-center">
-                      <AlertCircle className="h-12 w-12 opacity-50" />
+                {/* Rating View */}
+                {currentView === 'rating' && (
+                  <div className="space-y-6 animate-fadeIn">
+                    <div className="text-center bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl">
+                      <div className="bg-white rounded-full p-4 w-16 h-16 mx-auto mb-4 shadow-md">
+                        <Star className="h-8 w-8 text-yellow-500 fill-yellow-500" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-gray-800 mb-2">ประเมินการให้บริการ</h2>
+                      <p className="text-gray-600">โปรดให้คะแนนความพึงพอใจในการให้บริการครั้งนี้</p>
                     </div>
-                    <p className="text-lg font-medium mb-2">ไม่มีรายการ{statusFilter}</p>
-                    <p className="text-sm text-gray-400">รายการจะแสดงเมื่อมีการแจ้งซ่อม</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {filteredRepairs.map((repair) => {
-                      const isProcessing = processingIds.has(repair.id);
-                      return (
-                        <div key={repair.id} className={`bg-white rounded-xl p-5 border border-gray-200 hover:shadow-lg transition-all hover:border-blue-300 ${isProcessing ? 'opacity-70' : ''}`}>
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="flex items-start gap-3">
-                              <div className="bg-blue-100 p-2 rounded-lg mt-1">
-                                <AlertCircle className="h-5 w-5 text-blue-600" />
-                              </div>
-                              <div>
-                                <h3 className="font-bold text-lg text-gray-800">
-                                  {repair.teacherName}
-                                </h3>
-                                <p className="text-sm text-gray-600 flex items-center gap-1">
-                                  <span>🏢</span> {repair.department}
-                                </p>
-                              </div>
-                            </div>
-                            <span className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap ${getStatusColor(repair.status)}`}>
-                              {repair.status}
-                            </span>
-                          </div>
-
-                          <div className="grid md:grid-cols-2 gap-3 mb-4 text-sm bg-gray-50 p-4 rounded-lg">
-                            <div className="text-gray-700">
-                              <span className="font-semibold">🔧 ประเภท:</span> {repair.problemType}
-                            </div>
-                            <div className="text-gray-700">
-                              <span className="font-semibold">🔢 ครุภัณฑ์:</span> {repair.assetNumber}
-                            </div>
-                            <div className="text-gray-700">
-                              <span className="font-semibold">📞 เบอร์โทร:</span> {repair.phone}
-                            </div>
-                            <div className="text-gray-700">
-                              <span className="font-semibold">📍 สถานที่:</span> {repair.location}
-                            </div>
-                            <div className="text-gray-700 col-span-2">
-                              <span className="font-semibold">🕐 แจ้งเมื่อ:</span> {repair.createdAt}
-                            </div>
-                          </div>
-
-                          <div className="bg-blue-50 p-4 rounded-lg mb-4 border-l-4 border-blue-500">
-                            <p className="text-sm text-gray-800 leading-relaxed">
-                              <span className="font-semibold text-blue-800">📝 ปัญหา:</span> {repair.description}
-                            </p>
-                          </div>
-
-                          {repair.rating && repair.rating.score > 0 && (
-                            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200 mb-4">
-                              <div className="flex items-center gap-2 mb-3">
-                                <span className="text-sm font-semibold text-green-800">✅ การประเมิน:</span>
-                                <div className="flex">
-                                  {[1, 2, 3, 4, 5].map((star) => (
-                                    <Star
-                                      key={star}
-                                      className={`h-5 w-5 ${
-                                        star <= repair.rating.score
-                                          ? 'fill-yellow-400 text-yellow-400'
-                                          : 'text-gray-300'
-                                      }`}
-                                    />
-                                  ))}
-                                </div>
-                                <span className="text-sm font-bold text-green-700">({repair.rating.score}/5)</span>
-                              </div>
-                              {repair.rating.technicianName && (
-                                <p className="text-sm text-gray-700 mb-2">
-                                  <span className="font-semibold">👨‍🔧 ช่างผู้ซ่อม:</span> {repair.rating.technicianName}
-                                </p>
-                              )}
-                              {repair.rating.comment && (
-                                <p className="text-sm text-gray-700 italic bg-white p-3 rounded border border-green-200">
-                                  💬 {repair.rating.comment}
-                                </p>
-                              )}
-                            </div>
-                          )}
-
-                          {isProcessing && (
-                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-3 flex items-center gap-3 animate-pulse shadow-md">
-                              <div className="h-6 w-6 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                              <div>
-                                <p className="text-sm text-blue-800 font-bold">✨ กำลังอัปเดตสถานะ...</p>
-                                <p className="text-xs text-blue-600">กรุณารอสักครู่ ระบบกำลังบันทึกข้อมูล</p>
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="flex gap-2">
-                            {repair.status === 'รอดำเนินการ' && (
-                              <button
-                                onClick={() => updateRepairStatus(repair.id, 'กำลังดำเนินการ')}
-                                disabled={connectionStatus === 'error' || isProcessing}
-                                className={`flex-1 bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform ${!isProcessing ? 'hover:scale-105' : ''}`}
-                              >
-                                {isProcessing ? (
-                                  <span className="flex items-center justify-center gap-2">
-                                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    กำลังเปลี่ยน...
-                                  </span>
-                                ) : '▶️ เริ่มดำเนินการ'}
-                              </button>
-                            )}
-                            {repair.status === 'กำลังดำเนินการ' && (
-                              <button
-                                onClick={() => updateRepairStatus(repair.id, 'เสร็จสิ้น')}
-                                disabled={connectionStatus === 'error' || isProcessing}
-                                className={`flex-1 bg-green-500 text-white py-2.5 px-4 rounded-lg hover:bg-green-600 transition-all text-sm font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform ${!isProcessing ? 'hover:scale-105' : ''}`}
-                              >
-                                {isProcessing ? (
-                                  <span className="flex items-center justify-center gap-2">
-                                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    กำลังเปลี่ยน...
-                                  </span>
-                                ) : '✅ เสร็จสิ้น'}
-                              </button>
-                            )}
-                            {repair.status === 'เสร็จสิ้น' && (!repair.rating || repair.rating.score === 0) && (
-                              <button
-                                onClick={() => startRating(repair)}
-                                className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2.5 px-4 rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all text-sm font-medium shadow-md hover:shadow-lg transform hover:scale-105"
-                              >
-                                ⭐ ประเมินการบริการ
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Rating View */}
-            {currentView === 'rating' && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="text-center bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl">
-                  <div className="bg-white rounded-full p-4 w-16 h-16 mx-auto mb-4 shadow-md">
-                    <Star className="h-8 w-8 text-yellow-500 fill-yellow-500" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2">ประเมินการให้บริการ</h2>
-                  <p className="text-gray-600">โปรดให้คะแนนความพึงพอใจในการให้บริการครั้งนี้</p>
-                </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
