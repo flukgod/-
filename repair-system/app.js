@@ -1051,10 +1051,124 @@ root.render(<RepairSystem />); transition-all disabled:bg-gray-100 disabled:curs
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           🔢 หมายเลขครุภัณฑ์ <span className="text-red-500">*</span>
                         </label>
+                      placeholder="ระบุหมายเลขครุภัณฑ์ เช่น 417-64-0001"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          📞 เบอร์โทรศัพท์ <span className="text-red-500">*</span>
+                        </label>
                         <input
-                          type="text"
-                          name="assetNumber"
-                          value={formData.assetNumber}
+                          type="tel"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            const numbers = value.replace(/[^\d]/g, '');
+                            const limited = numbers.slice(0, 10);
+                            
+                            let formatted = limited;
+                            if (limited.length > 6) {
+                              formatted = limited.slice(0, 3) + '-' + limited.slice(3, 6) + '-' + limited.slice(6);
+                            } else if (limited.length > 3) {
+                              formatted = limited.slice(0, 3) + '-' + limited.slice(3);
+                            }
+                            
+                            setFormData({ ...formData, phone: formatted });
+                          }}
+                          disabled={isSubmitting}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          placeholder="xxx-xxx-xxxx"
+                          maxLength="12"
+                        />
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            🔧 ประเภทปัญหา <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            name="problemType"
+                            value={formData.problemType}
+                            onChange={handleInputChange}
+                            disabled={isSubmitting}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          >
+                            <option value="">เลือกประเภทปัญหา</option>
+                            <option value="คอมพิวเตอร์">🖥️ คอมพิวเตอร์</option>
+                            <option value="เครื่องพิมพ์">🖨️ เครื่องพิมพ์</option>
+                            <option value="เครือข่าย/อินเทอร์เน็ต">🌐 เครือข่าย/อินเทอร์เน็ต</option>
+                            <option value="โปรแกรม/ซอฟต์แวร์">💾 โปรแกรม/ซอฟต์แวร์</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            📍 สถานที่ <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            name="location"
+                            value={formData.location}
+                            onChange={handleInputChange}
+                            disabled={isSubmitting}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            placeholder="อาคาร/ห้อง"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          📝 รายละเอียดปัญหา <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          name="description"
+                          value={formData.description}
                           onChange={handleInputChange}
                           disabled={isSubmitting}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                          rows="5"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          placeholder="อธิบายปัญหาที่พบโดยละเอียด เช่น คอมพิวเตอร์เปิดเครื่องไม่ติด, ไวไฟใช้ไม่ได้, Office ใช้งานไม่ได้"
+                        />
+                      </div>
+
+                      <button
+                        onClick={handleSubmit}
+                        disabled={connectionStatus === 'error' || isSubmitting}
+                        className={`w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${isSubmitting ? 'button-processing' : ''}`}
+                      >
+                        {isSubmitting ? '⏳ กำลังส่งข้อมูล...' : connectionStatus === 'error' ? '⚠️ ไม่สามารถส่งได้ (ไม่เชื่อมต่อ)' : '📤 ส่งแจ้งซ่อม'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* List View */}
+                {currentView === 'list' && (
+                  <div className="text-center py-16">
+                    <p className="text-gray-500">ส่วนแสดงรายการจะอยู่ที่นี่</p>
+                  </div>
+                )}
+
+                {/* Rating View */}
+                {currentView === 'rating' && (
+                  <div className="text-center py-16">
+                    <p className="text-gray-500">ส่วนให้คะแนนจะอยู่ที่นี่</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<RepairSystem />);
+
+
