@@ -641,11 +641,11 @@ function RepairSystem() {
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed bg-white"
                         >
                           <option value="">-- เลือกแผนก/งาน --</option>
-                          <option value="สายวิชาการตลาด">สายวิชาการตลาด</option>
-                          <option value="สายวิชาการจัดการสำนักงาน/การวิจัดการโลจิสติกส์และโซ่อุปทาน">สายวิชาการจัดการสำนักงาน/การวิจัดการโลจิสติกส์และโซ่อุปทาน</option>
-                          <option value="สายวิชาดิจิทัลกราฟฟิก">สายวิชาดิจิทัลกราฟฟิก</option>
-                          <option value="สายวิชาการท่องเที่ยว">สายวิชาการท่องเที่ยว</option>
-                          <option value="สายวิชาการโรงแรม">สายวิชาการโรงแรม</option>
+                          <option value="แผนกคอมพิวเตอร์โปรแกรมเมอร์">สายวิชาการตลาด</option>
+                          <option value="แผนกการบัญชี">สายวิชาการจัดการสำนักงาน/การวิจัดการโลจิสติกส์และโซ่อุปทาน</option>
+                          <option value="แผนกการตลาด">สายวิชาดิจิทัลกราฟฟิก</option>
+                          <option value="แผนกการจัดการสำนักงาน/การจัดการโลจิสติกส์และซัพพลายเชน">สายวิชาการท่องเที่ยว</option>
+                          <option value="แผนกการโรงแรม">สายวิชาการโรงแรม</option>
                           <option value="สายวิชาเทคโนโลยีธุรกิจดิจิทัล">สายวิชาเทคโนโลยีธุรกิจดิจิทัล</option>
                           <option value="สายวิชาสามัญ-สัมพันธ์">สายวิชาสามัญ-สัมพันธ์</option>
                           <option value="สายวิชาศิลปกรรมศาสตร์">สายวิชาศิลปกรรมศาสตร์</option>
