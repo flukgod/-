@@ -613,7 +613,7 @@ function RepairSystem() {
 
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           👤 ชื่อ-นามสกุล ผู้แจ้ง <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -623,7 +623,7 @@ function RepairSystem() {
                           onChange={handleInputChange}
                           disabled={isSubmitting}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-                          placeholder="เช่น แผนกช่างยนต์, แผนกคอมพิวเตอร์"
+                          placeholder="ระบุชื่อ-นามสกุล"
                         />
                       </div>
 
