@@ -6,7 +6,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzLz8-4sOXjdBW7A6Tms
 
 // Cache Configuration
 const CACHE_KEY = 'repair_cache';
-const CACHE_DURATION = 60000; // 1 นาที
+const CACHE_DURATION = 600000; // 10 นาที
 const FILTER_KEY = 'status_filter';
 
 // Icons Components
@@ -243,33 +243,34 @@ function RepairSystem() {
 
   const saveRepair = async (repair, action) => {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+     const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // เพิ่มเป็น 15 วินาที
 
-      const response = await fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-          action: action,
-          ...repair
-        }),
-        redirect: 'follow',
-        signal: controller.signal
-      });
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: action,
+        ...repair
+      }),
+      redirect: 'follow',
+      signal: controller.signal
+    });
 
-      clearTimeout(timeoutId);
+    clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        return false;
-      }
-
-      await loadRepairs(true);
-      return true;
-
-    } catch (error) {
-      console.error('Error saving repair:', error);
+    if (!response.ok) {
       return false;
     }
-  };
+
+    // ไม่ต้อง reload ข้อมูลทั้งหมด (ประหยัดเวลา)
+    // ข้อมูลถูกอัพเดทแบบ optimistic แล้ว
+    return true;
+
+  } catch (error) {
+    console.error('Error saving repair:', error);
+    return false;
+  }
+};
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -277,89 +278,96 @@ function RepairSystem() {
 
   const handleSubmit = async () => {
     if (!formData.teacherName || !formData.department || !formData.assetNumber || 
-        !formData.phone || !formData.problemType || !formData.description || !formData.location) {
-      alert('⚠️ กรุณากรอกข้อมูลให้ครบถ้วน');
-      return;
-    }
+      !formData.phone || !formData.problemType || !formData.description || !formData.location) {
+    alert('⚠️ กรุณากรอกข้อมูลให้ครบถ้วน');
+    return;
+  }
 
-    const phoneDigits = formData.phone.replace(/[^\d]/g, '');
-    if (phoneDigits.length !== 10) {
-      alert('⚠️ กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก');
-      return;
-    }
+  const phoneDigits = formData.phone.replace(/[^\d]/g, '');
+  if (phoneDigits.length !== 10) {
+    alert('⚠️ กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก');
+    return;
+  }
 
-    setIsSubmitting(true);
-
-    const newRepair = {
-      id: Date.now(),
-      ...formData,
-      status: 'รอดำเนินการ',
-      createdAt: formatDateTime(new Date()),
-      completedAt: null,
-      rating: null
-    };
-
-    setRepairs(prev => [newRepair, ...prev]);
-    
-    const success = await saveRepair(newRepair, 'add');
-    
-    setIsSubmitting(false);
-    
-    if (success) {
-      setFormData({
-        teacherName: '',
-        department: '',
-        assetNumber: '',
-        phone: '',
-        problemType: '',
-        description: '',
-        location: ''
-      });
-      alert('✅ บันทึกการแจ้งซ่อมเรียบร้อยแล้ว');
-      setStatusFilter('รอดำเนินการ');
-      setCurrentView('list');
-    } else {
-      setRepairs(prev => prev.filter(r => r.id !== newRepair.id));
-      alert('❌ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
-    }
+  const newRepair = {
+    id: Date.now(),
+    ...formData,
+    status: 'รอดำเนินการ',
+    createdAt: formatDateTime(new Date()),
+    completedAt: null,
+    rating: null
   };
+
+  // 🚀 OPTIMISTIC UPDATE - แสดงผลทันที
+  setRepairs(prev => [newRepair, ...prev]);
+  setCache([newRepair, ...repairs]); // อัพเดท cache
+  
+  // ล้างฟอร์ม และเปลี่ยนหน้าทันที
+  setFormData({
+    teacherName: '',
+    department: '',
+    assetNumber: '',
+    phone: '',
+    problemType: '',
+    description: '',
+    location: ''
+  });
+  setStatusFilter('รอดำเนินการ');
+  setCurrentView('list');
+  
+  // แสดงข้อความสำเร็จทันที
+  alert('✅ บันทึกการแจ้งซ่อมเรียบร้อยแล้ว');
+
+  // 📤 ส่งไป Google Sheets ในพื้นหลัง (ไม่ต้องรอ)
+  setIsSubmitting(true);
+  const success = await saveRepair(newRepair, 'add');
+  setIsSubmitting(false);
+  
+  if (!success) {
+    // ถ้าส่งไม่สำเร็จ แสดง toast เตือนเบาๆ (ไม่ลบข้อมูล)
+    console.warn('⚠️ ข้อมูลถูกบันทึกในเครื่อง แต่ยังไม่ได้ส่งไปยัง Google Sheets');
+  }
+};
 
   const updateRepairStatus = async (repairId, newStatus) => {
     const repair = repairs.find(r => r.id === repairId);
-    if (!repair) return;
+  if (!repair) return;
 
-    if (processingIds.has(repairId)) return;
+  if (processingIds.has(repairId)) return;
 
-    setProcessingIds(prev => new Set([...prev, repairId]));
-
-    const updated = {
-      ...repair,
-      status: newStatus,
-      completedAt: newStatus === 'เสร็จสิ้น' ? formatDateTime(new Date()) : repair.completedAt
-    };
-
-    setRepairs(prev => prev.map(r => r.id === repairId ? updated : r));
-
-    if (newStatus === 'กำลังดำเนินการ') {
-      setTimeout(() => setStatusFilter('กำลังดำเนินการ'), 300);
-    } else if (newStatus === 'เสร็จสิ้น') {
-      setTimeout(() => setStatusFilter('เสร็จสิ้น'), 300);
-    }
-
-    const success = await saveRepair(updated, 'update');
-    
-    setProcessingIds(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(repairId);
-      return newSet;
-    });
-
-    if (!success) {
-      setRepairs(prev => prev.map(r => r.id === repairId ? repair : r));
-      alert('❌ เกิดข้อผิดพลาดในการอัปเดตสถานะ กรุณาลองใหม่อีกครั้ง');
-      setStatusFilter(repair.status);
-    }
+  const updated = {
+    ...repair,
+    status: newStatus,
+    completedAt: newStatus === 'เสร็จสิ้น' ? formatDateTime(new Date()) : repair.completedAt
   };
+
+  // 🚀 OPTIMISTIC UPDATE - เปลี่ยนสถานะทันที
+  setRepairs(prev => prev.map(r => r.id === repairId ? updated : r));
+  setCache(repairs.map(r => r.id === repairId ? updated : r)); // อัพเดท cache
+
+  // เปลี่ยน tab ทันที
+  if (newStatus === 'กำลังดำเนินการ') {
+    setTimeout(() => setStatusFilter('กำลังดำเนินการ'), 100);
+  } else if (newStatus === 'เสร็จสิ้น') {
+    setTimeout(() => setStatusFilter('เสร็จสิ้น'), 100);
+  }
+
+  // 📤 ส่งไป Google Sheets ในพื้นหลัง
+  setProcessingIds(prev => new Set([...prev, repairId]));
+  const success = await saveRepair(updated, 'update');
+  setProcessingIds(prev => {
+    const newSet = new Set(prev);
+    newSet.delete(repairId);
+    return newSet;
+  });
+
+  if (!success) {
+    // ถ้าส่งไม่สำเร็จ rollback
+    setRepairs(prev => prev.map(r => r.id === repairId ? repair : r));
+    alert('❌ เกิดข้อผิดพลาดในการอัปเดตสถานะ กรุณาลองใหม่อีกครั้ง');
+    setStatusFilter(repair.status);
+  }
+};
 
   const handleRatingSubmit = async () => {
     if (ratingData.rating === 0) {
