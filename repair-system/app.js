@@ -629,6 +629,21 @@ function RepairSystem() {
 
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          🏢 แผนก/งาน <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="department"
+                          value={formData.department}
+                          onChange={handleInputChange}
+                          disabled={isSubmitting}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          placeholder="ระบุแผนกหรืองาน"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
                           🔢 หมายเลขครุภัณฑ์ <span className="text-red-500">*</span>
                         </label>
                         <input
