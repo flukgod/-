@@ -413,7 +413,7 @@ function RepairSystem() {
       repairId: repair.id,
       rating: 0,
       comment: '',
-      technicianName: 'ฟลุ๊ค ศรัดย์ภัทร'
+      technicianName: 'ฟลุ๊ก ศรัณย์ภัทร'
     });
     setCurrentView('rating');
   };
