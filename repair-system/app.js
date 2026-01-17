@@ -2,7 +2,7 @@
 const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
 // ⚠️ แทนที่ URL นี้ด้วย Apps Script URL ของคุณ
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzLz8-4sOXjdBW7A6TmspTmqAGMAwOugeiD00zXpEC08QfbTci0zRQPhWPDZXIod0FXIg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHFBC0J7SjE-26KUI1YyFXiAdfzZWGEHRa0qimnXUKK5_1gMW9wcnkgjVJNtcgY9myjw/exec';
 
 // Cache Configuration
 const CACHE_KEY = 'repair_cache';
