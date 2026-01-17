@@ -245,21 +245,27 @@ function RepairSystem() {
 
   const saveRepair = async (repair, action) => {
     try {
+     console.log('📤 กำลังส่งข้อมูล:', { action, repair });
      const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); // เพิ่มเป็น 15 วินาที
 
     const response = await fetch(SCRIPT_URL, {
-      method: 'POST',
+       method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain', 
+      },
       body: JSON.stringify({
         action: action,
         ...repair
       }),
+      mode: 'no-cors', 
       redirect: 'follow',
       signal: controller.signal
     });
 
     clearTimeout(timeoutId);
-
+    console.log('✅ Response status:', response.status);
+    return true;
     if (!response.ok) {
       return false;
     }
@@ -269,7 +275,15 @@ function RepairSystem() {
     return true;
 
   } catch (error) {
-    console.error('Error saving repair:', error);
+    console.error('❌ Error saving repair:', error);
+    if (error.name === 'AbortError') {
+      console.error('⏱️ Timeout: หมดเวลาการเชื่อมต่อ');
+    } else if (error.message.includes('Failed to fetch')) {
+      console.error('🌐 Network Error: ไม่สามารถเชื่อมต่อได้');
+      alert('❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์\n\nกรุณาตรวจสอบ:\n1. URL ของ Apps Script ถูกต้องหรือไม่\n2. Deploy ใหม่แล้วหรือยัง\n3. Permission ตั้งเป็น "Anyone" แล้วหรือยัง');
+    } else {
+      console.error('⚠️ Unknown Error:', error);
+    }
     return false;
   }
 };
