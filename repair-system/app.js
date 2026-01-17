@@ -97,7 +97,7 @@ function RepairSystem() {
     description: '',
     location: ''
   });
-  const [deptSearch, setDepSearch] = useState('');
+  const [deptSearch, setDeptSearch] = useState('');
   const [showDeptList, setShowDeptList] = useState(false);
   const [ratingData, setRatingData] = useState({
     repairId: null,
