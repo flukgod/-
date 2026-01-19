@@ -549,31 +549,32 @@ const filteredDepts = deptSearch
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 md:p-6">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
                 <img 
                   src="Fix-Foder/logo.png" 
                   alt="Logo" 
-                  className="h-20 w-20 object-contain bg-white rounded-xl p-2 shadow-lg"
+                  className="h-12 w-12 md:h-16 md:w-16 object-contain bg-white rounded-lg md:rounded-xl p-1 md:p-2 shadow-lg flex-shrink-0"
                   onError={(e) => {
                     e.target.style.display = 'none';
                   }}
                 />
-                <div>
-                  <h1 className="text-3xl font-bold mb-2">ระบบแจ้งซ่อมคอมพิวเตอร์และอุปกรณ์</h1>
-                  <p className="text-blue-100">วิทยาลัยอาชีวศึกษาสุรินทร์</p>
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-base md:text-2xl lg:text-3xl font-bold mb-1 leading-tight">ระบบแจ้งซ่อมคอมพิวเตอร์และอุปกรณ์</h1>
+                  <p className="text-xs md:text-sm text-blue-100">วิทยาลัยอาชีวศึกษาสุรินทร์</p>
                 </div>
               </div>
             </div>
-            <div className="mt-4 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm">
+            <div className="mt-3 md:mt-4 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-xs md:text-sm">
                 <div className={`h-2 w-2 rounded-full ${
                   connectionStatus === 'connected' ? 'bg-green-400 animate-pulse' :
                   connectionStatus === 'error' ? 'bg-red-400' :
                   'bg-yellow-400 animate-pulse'
                 }`}></div>
-                <span className="text-blue-100">
+                <span className="text-blue-100 truncate">
                   {connectionStatus === 'connected' && '🟢 เชื่อมต่อสำเร็จ'}
                   {connectionStatus === 'error' && '🔴 ไม่สามารถเชื่อมต่อ'}
                   {connectionStatus === 'connecting' && '🟡 กำลังเชื่อมต่อ...'}
@@ -582,10 +583,10 @@ const filteredDepts = deptSearch
               {connectionStatus === 'error' && (
                 <button
                   onClick={() => loadRepairs(true)}
-                  className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm transition-all"
+                  className="flex items-center gap-1 md:gap-2 bg-white/20 hover:bg-white/30 text-white px-2 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm transition-all"
                 >
-                  <RefreshCw className="h-4 w-4" />
-                  ลองใหม่
+                  <RefreshCw className="h-3 w-3 md:h-4 md:w-4" />
+                  <span className="hidden sm:inline">ลองใหม่</span>
                 </button>
               )}
             </div>
