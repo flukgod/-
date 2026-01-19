@@ -277,8 +277,8 @@ function RepairSystem() {
   };
 
   const handleSubmit = async () => {
-    if (!formData.teacherName || !formData.department || !formData.assetNumber || 
-      !formData.phone || !formData.problemType || !formData.description || !formData.location) {
+  if (!formData.teacherName || !formData.department || !formData.assetNumber || 
+    !formData.phone || !formData.problemType || !formData.description || !formData.location) {
     alert('⚠️ กรุณากรอกข้อมูลให้ครบถ้วน');
     return;
   }
@@ -298,11 +298,21 @@ function RepairSystem() {
     rating: null
   };
 
-  // 🚀 OPTIMISTIC UPDATE - แสดงผลทันที
-  setRepairs(prev => [newRepair, ...prev]);
-  setCache([newRepair, ...repairs]); // อัพเดท cache
+  const newRepair = {
+    id: Date.now(),
+    ...formData,
+    status: 'รอดำเนินการ',
+    createdAt: formatDateTime(new Date()),
+    completedAt: null,
+    rating: null
+  };
   
-  // ล้างฟอร์ม และเปลี่ยนหน้าทันที
+  // 🚀 OPTIMISTIC UPDATE - แสดงผลทันที
+  setRepairs(prev => {
+    const newRepairs = [newRepair, ...prev];
+    setCache(newRepairs);
+    return newRepairs;
+  });
   setFormData({
     teacherName: '',
     department: '',
@@ -315,24 +325,20 @@ function RepairSystem() {
   setStatusFilter('รอดำเนินการ');
   setCurrentView('list');
   
-  // แสดงข้อความสำเร็จทันที
   alert('✅ บันทึกการแจ้งซ่อมเรียบร้อยแล้ว');
 
-  // 📤 ส่งไป Google Sheets ในพื้นหลัง (ไม่ต้องรอ)
   setIsSubmitting(true);
   const success = await saveRepair(newRepair, 'add');
   setIsSubmitting(false);
   
   if (!success) {
-    // ถ้าส่งไม่สำเร็จ แสดง toast เตือนเบาๆ (ไม่ลบข้อมูล)
     console.warn('⚠️ ข้อมูลถูกบันทึกในเครื่อง แต่ยังไม่ได้ส่งไปยัง Google Sheets');
   }
 };
 
-  const updateRepairStatus = async (repairId, newStatus) => {
-    const repair = repairs.find(r => r.id === repairId);
+ const updateRepairStatus = async (repairId, newStatus) => {
+  const repair = repairs.find(r => r.id === repairId);
   if (!repair) return;
-
   if (processingIds.has(repairId)) return;
 
   const updated = {
@@ -341,18 +347,18 @@ function RepairSystem() {
     completedAt: newStatus === 'เสร็จสิ้น' ? formatDateTime(new Date()) : repair.completedAt
   };
 
-  // 🚀 OPTIMISTIC UPDATE - เปลี่ยนสถานะทันที
-  setRepairs(prev => prev.map(r => r.id === repairId ? updated : r));
-  setCache(repairs.map(r => r.id === repairId ? updated : r)); // อัพเดท cache
+  setRepairs(prev => {
+    const newRepairs = prev.map(r => r.id === repairId ? updated : r);
+    setCache(newRepairs);
+    return newRepairs;
+  });
 
-  // เปลี่ยน tab ทันที
   if (newStatus === 'กำลังดำเนินการ') {
     setTimeout(() => setStatusFilter('กำลังดำเนินการ'), 100);
   } else if (newStatus === 'เสร็จสิ้น') {
     setTimeout(() => setStatusFilter('เสร็จสิ้น'), 100);
   }
 
-  // 📤 ส่งไป Google Sheets ในพื้นหลัง
   setProcessingIds(prev => new Set([...prev, repairId]));
   const success = await saveRepair(updated, 'update');
   setProcessingIds(prev => {
@@ -362,14 +368,13 @@ function RepairSystem() {
   });
 
   if (!success) {
-    // ถ้าส่งไม่สำเร็จ rollback
     setRepairs(prev => prev.map(r => r.id === repairId ? repair : r));
     alert('❌ เกิดข้อผิดพลาดในการอัปเดตสถานะ กรุณาลองใหม่อีกครั้ง');
     setStatusFilter(repair.status);
   }
 };
 
-  const handleRatingSubmit = async () => {
+  const andleRatingSubmit = async () => {
   if (ratingData.rating === 0) {
     alert('⚠️ กรุณาให้คะแนน');
     return;
@@ -392,24 +397,22 @@ function RepairSystem() {
     }
   };
 
-  // 🚀 อัปเดตทันที (Optimistic Update)
-  setRepairs(prev => prev.map(r => r.id === ratingData.repairId ? updated : r));
-  setCache(repairs.map(r => r.id === ratingData.repairId ? updated : r)); // อัปเดท cache
+  setRepairs(prev => {
+    const newRepairs = prev.map(r => r.id === ratingData.repairId ? updated : r);
+    setCache(newRepairs);
+    return newRepairs;
+  });
 
-  // 📤 ส่งไป Google Sheets
   const success = await saveRepair(updated, 'update');
   
   setIsSubmitting(false);
   
   if (success) {
-    // ✅ โหลดข้อมูลใหม่จาก Google Sheets (สำคัญมาก!)
     await loadRepairs(true);
-    
     setRatingData({ repairId: null, rating: 0, comment: '', technicianName: '' });
     alert('✅ ขอบคุณสำหรับการให้คะแนนค่ะ');
     setCurrentView('list');
   } else {
-    // ❌ ถ้าส่งไม่สำเร็จ rollback
     setRepairs(prev => prev.map(r => r.id === ratingData.repairId ? repair : r));
     alert('❌ เกิดข้อผิดพลาดในการบันทึกการประเมิน');
   }
