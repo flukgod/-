@@ -297,16 +297,6 @@ function RepairSystem() {
     completedAt: null,
     rating: null
   };
-
-  const newRepair = {
-    id: Date.now(),
-    ...formData,
-    status: 'รอดำเนินการ',
-    createdAt: formatDateTime(new Date()),
-    completedAt: null,
-    rating: null
-  };
-  
   // 🚀 OPTIMISTIC UPDATE - แสดงผลทันที
   setRepairs(prev => {
     const newRepairs = [newRepair, ...prev];
