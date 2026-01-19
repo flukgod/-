@@ -364,7 +364,7 @@ function RepairSystem() {
   }
 };
 
-  const andleRatingSubmit = async () => {
+  const handleRatingSubmit = async () => {
   if (ratingData.rating === 0) {
     alert('⚠️ กรุณาให้คะแนน');
     return;
