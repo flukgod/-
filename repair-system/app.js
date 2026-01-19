@@ -370,43 +370,50 @@ function RepairSystem() {
 };
 
   const handleRatingSubmit = async () => {
-    if (ratingData.rating === 0) {
-      alert('⚠️ กรุณาให้คะแนน');
-      return;
-    }
+  if (ratingData.rating === 0) {
+    alert('⚠️ กรุณาให้คะแนน');
+    return;
+  }
 
-    setIsSubmitting(true);
+  setIsSubmitting(true);
 
-    const repair = repairs.find(r => r.id === ratingData.repairId);
-    if (!repair) {
-      setIsSubmitting(false);
-      return;
-    }
-
-    const updated = {
-      ...repair,
-      rating: {
-        technicianName: ratingData.technicianName,
-        score: ratingData.rating,
-        comment: ratingData.comment
-      }
-    };
-
-    setRepairs(prev => prev.map(r => r.id === ratingData.repairId ? updated : r));
-
-    const success = await saveRepair(updated, 'update');
-    
+  const repair = repairs.find(r => r.id === ratingData.repairId);
+  if (!repair) {
     setIsSubmitting(false);
-    
-    if (success) {
-      setRatingData({ repairId: null, rating: 0, comment: '', technicianName: '' });
-      alert('✅ ขอบคุณสำหรับการให้คะแนนค่ะ');
-      setCurrentView('list');
-    } else {
-      setRepairs(prev => prev.map(r => r.id === ratingData.repairId ? repair : r));
-      alert('❌ เกิดข้อผิดพลาดในการบันทึกการประเมิน');
+    return;
+  }
+
+  const updated = {
+    ...repair,
+    rating: {
+      technicianName: ratingData.technicianName,
+      score: ratingData.rating,
+      comment: ratingData.comment
     }
   };
+
+  // 🚀 อัปเดตทันที (Optimistic Update)
+  setRepairs(prev => prev.map(r => r.id === ratingData.repairId ? updated : r));
+  setCache(repairs.map(r => r.id === ratingData.repairId ? updated : r)); // อัปเดท cache
+
+  // 📤 ส่งไป Google Sheets
+  const success = await saveRepair(updated, 'update');
+  
+  setIsSubmitting(false);
+  
+  if (success) {
+    // ✅ โหลดข้อมูลใหม่จาก Google Sheets (สำคัญมาก!)
+    await loadRepairs(true);
+    
+    setRatingData({ repairId: null, rating: 0, comment: '', technicianName: '' });
+    alert('✅ ขอบคุณสำหรับการให้คะแนนค่ะ');
+    setCurrentView('list');
+  } else {
+    // ❌ ถ้าส่งไม่สำเร็จ rollback
+    setRepairs(prev => prev.map(r => r.id === ratingData.repairId ? repair : r));
+    alert('❌ เกิดข้อผิดพลาดในการบันทึกการประเมิน');
+  }
+};
 
   const startRating = (repair) => {
     setRatingData({
