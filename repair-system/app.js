@@ -1,15 +1,11 @@
 
 const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
-// ⚠️ แทนที่ URL นี้ด้วย Apps Script URL ของคุณ
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHFBC0J7SjE-26KUI1YyFXiAdfzZWGEHRa0qimnXUKK5_1gMW9wcnkgjVJNtcgY9myjw/exec';
-
-// Cache Configuration
 const CACHE_KEY = 'repair_cache';
-const CACHE_DURATION = 600000; // 10 นาที
+const CACHE_DURATION = 600000;
 const FILTER_KEY = 'status_filter';
 
-// Icons Components
 const AlertCircle = ({ className }) => (
   <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
     <circle cx="12" cy="12" r="10"></circle>
@@ -48,31 +44,25 @@ const RefreshCw = ({ className }) => (
   </svg>
 );
 
-// Skeleton Loading Component
 const SkeletonCard = () => (
-  <div className="bg-white rounded-xl p-5 border border-gray-200">
+  <div className="bg-white rounded-xl p-3 md:p-5 border border-gray-200">
     <div className="flex justify-between items-start mb-4">
       <div className="flex items-start gap-3 flex-1">
-        <div className="skeleton h-12 w-12 rounded-lg"></div>
+        <div className="skeleton h-10 w-10 md:h-12 md:w-12 rounded-lg"></div>
         <div className="flex-1">
-          <div className="skeleton h-6 w-48 mb-2 rounded"></div>
-          <div className="skeleton h-4 w-32 rounded"></div>
+          <div className="skeleton h-5 w-32 md:w-48 mb-2 rounded"></div>
+          <div className="skeleton h-4 w-24 md:w-32 rounded"></div>
         </div>
       </div>
-      <div className="skeleton h-8 w-24 rounded-full"></div>
     </div>
-    <div className="grid md:grid-cols-2 gap-3 mb-4">
-      <div className="skeleton h-4 w-full rounded"></div>
-      <div className="skeleton h-4 w-full rounded"></div>
+    <div className="grid grid-cols-2 gap-3 mb-4">
       <div className="skeleton h-4 w-full rounded"></div>
       <div className="skeleton h-4 w-full rounded"></div>
     </div>
-    <div className="skeleton h-20 w-full rounded-lg mb-4"></div>
-    <div className="skeleton h-10 w-full rounded-lg"></div>
+    <div className="skeleton h-16 w-full rounded-lg"></div>
   </div>
 );
 
-// Main Component
 function RepairSystem() {
   const [currentView, setCurrentView] = useState('home');
   const [statusFilter, setStatusFilter] = useState(() => {
@@ -109,26 +99,22 @@ function RepairSystem() {
   const loadTimeoutRef = useRef(null);
   const xlsxLoadedRef = useRef(false);
 
-  // Format date as DD/MM/YY(พ.ศ.) HH:MM น.
   const formatDateTime = (date) => {
     const d = new Date(date);
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0');
-    const buddhistYear = String(d.getFullYear() + 543).slice(-2); // แปลงเป็นพ.ศ.
+    const buddhistYear = String(d.getFullYear() + 543).slice(-2);
     const hours = String(d.getHours()).padStart(2, '0');
     const minutes = String(d.getMinutes()).padStart(2, '0');
     return `${day}/${month}/${buddhistYear} ${hours}:${minutes} น.`;
   };
 
-  // Cache Helper Functions
   const getCache = useCallback(() => {
     try {
       const cached = sessionStorage.getItem(CACHE_KEY);
       if (cached) {
         const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < CACHE_DURATION) {
-          return data;
-        }
+        if (Date.now() - timestamp < CACHE_DURATION) return data;
       }
     } catch (e) {
       console.warn('Cache read error:', e);
@@ -138,22 +124,16 @@ function RepairSystem() {
 
   const setCache = useCallback((data) => {
     try {
-      sessionStorage.setItem(CACHE_KEY, JSON.stringify({
-        data,
-        timestamp: Date.now()
-      }));
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
     } catch (e) {
       console.warn('Cache write error:', e);
     }
   }, []);
 
-  // Save filter to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(FILTER_KEY, statusFilter);
-    } catch (e) {
-      console.warn('localStorage write error:', e);
-    }
+    } catch (e) {}
   }, [statusFilter]);
 
   const loadRepairs = useCallback(async (forceRefresh = false) => {
@@ -169,7 +149,6 @@ function RepairSystem() {
 
     setLoading(true);
     setErrorMessage('');
-
     if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
     
     loadTimeoutRef.current = setTimeout(() => {
@@ -179,23 +158,13 @@ function RepairSystem() {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-      const response = await fetch(SCRIPT_URL, {
-        method: 'GET',
-        redirect: 'follow',
-        signal: controller.signal
-      });
-
+      const response = await fetch(SCRIPT_URL, { method: 'GET', redirect: 'follow', signal: controller.signal });
       clearTimeout(timeoutId);
       clearTimeout(loadTimeoutRef.current);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const text = await response.text();
       let data;
-      
       try {
         data = JSON.parse(text);
       } catch (e) {
@@ -210,211 +179,168 @@ function RepairSystem() {
       } else {
         throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
       }
-
     } catch (error) {
       clearTimeout(loadTimeoutRef.current);
       console.error('Error loading repairs:', error);
       setConnectionStatus('error');
-      
       let message = 'ไม่สามารถโหลดข้อมูลได้';
-      
       if (error.name === 'AbortError') {
         message = '⏱️ หมดเวลาการเชื่อมต่อ (Timeout)\n\nกรุณา:\n• ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n• ลองใหม่อีกครั้ง';
       } else if (error.message.includes('Failed to fetch')) {
-        message = '❌ ไม่สามารถเชื่อมต่อกับ Google Sheets\n\n💡 แนะนำ:\n• ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n• ตรวจสอบ URL ของ Apps Script\n• ตรวจสอบสิทธิ์การเข้าถึง (ตั้งเป็น Anyone)';
-      } else if (error.message.includes('HTTP error')) {
-        message = `⚠️ เซิร์ฟเวอร์ตอบกลับผิดพลาด: ${error.message}`;
-      } else {
-        message = `⚠️ เกิดข้อผิดพลาด: ${error.message}`;
+        message = '❌ ไม่สามารถเชื่อมต่อกับ Google Sheets\n\n💡 แนะนำ:\n• ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n• ตรวจสอบ URL ของ Apps Script\n• ตรวจสอบสิทธิ์การเข้าถึง';
       }
-      
       setErrorMessage(message);
       setRepairs([]);
-      
     } finally {
       setLoading(false);
     }
   }, [getCache, setCache]);
 
   useEffect(() => {
-    loadRepairs();  
-    return () => {
-      if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
-    };
+    loadRepairs();
+    return () => { if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current); };
   }, [loadRepairs]);
 
   const saveRepair = async (repair, action) => {
     try {
-     console.log('📤 กำลังส่งข้อมูล:', { action, repair });
-     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // เพิ่มเป็น 15 วินาที
-
-    const response = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      body: JSON.stringify({
-        action: action,
-        ...repair
-      }),
-      redirect: 'follow',
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-    console.log('✅ ส่งสำเร็จ');
-    return true;
-
-  } catch (error) {
-    console.error('❌ Error saveing repair', error);
-
-    if (error.name === 'AbortError') {
-      console.error('⏱️ Timeout');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const response = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action, ...repair }),
+        redirect: 'follow',
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      return true;
+    } catch (error) {
+      console.error('Error saving repair', error);
+      return false;
     }
-    return false;
-  }
-};
+  };
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async () => {
-  if (!formData.teacherName || !formData.department || !formData.assetNumber || 
-    !formData.phone || !formData.problemType || !formData.description || !formData.location) {
-    alert('⚠️ กรุณากรอกข้อมูลให้ครบถ้วน');
-    return;
-  }
+    if (!formData.teacherName || !formData.department || !formData.assetNumber || 
+      !formData.phone || !formData.problemType || !formData.description || !formData.location) {
+      alert('⚠️ กรุณากรอกข้อมูลให้ครบถ้วน');
+      return;
+    }
 
-  const phoneDigits = formData.phone.replace(/[^\d]/g, '');
-  if (phoneDigits.length !== 10) {
-    alert('⚠️ กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก');
-    return;
-  }
+    const phoneDigits = formData.phone.replace(/[^\d]/g, '');
+    if (phoneDigits.length !== 10) {
+      alert('⚠️ กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก');
+      return;
+    }
 
-  const newRepair = {
-    id: Date.now(),
-    ...formData,
-    status: 'รอดำเนินการ',
-    createdAt: formatDateTime(new Date()),
-    completedAt: null,
-    rating: null
-  };
-  // 🚀 OPTIMISTIC UPDATE - แสดงผลทันที
-  setRepairs(prev => {
-    const newRepairs = [newRepair, ...prev];
-    setCache(newRepairs);
-    return newRepairs;
-  });
-  setFormData({
-    teacherName: '',
-    department: '',
-    assetNumber: '',
-    phone: '',
-    problemType: '',
-    description: '',
-    location: ''
-  });
-  setStatusFilter('รอดำเนินการ');
-  setCurrentView('list');
-  
-  alert('✅ บันทึกการแจ้งซ่อมเรียบร้อยแล้ว');
+    const newRepair = {
+      id: Date.now(),
+      ...formData,
+      status: 'รอดำเนินการ',
+      createdAt: formatDateTime(new Date()),
+      completedAt: null,
+      rating: null
+    };
 
-  setIsSubmitting(true);
-  const success = await saveRepair(newRepair, 'add');
-  setIsSubmitting(false);
-  
-  if (!success) {
-    console.warn('⚠️ ข้อมูลถูกบันทึกในเครื่อง แต่ยังไม่ได้ส่งไปยัง Google Sheets');
-  }
-};
+    setRepairs(prev => {
+      const newRepairs = [newRepair, ...prev];
+      setCache(newRepairs);
+      return newRepairs;
+    });
+    setFormData({ teacherName: '', department: '', assetNumber: '', phone: '', problemType: '', description: '', location: '' });
+    setStatusFilter('รอดำเนินการ');
+    setCurrentView('list');
+    alert('✅ บันทึกการแจ้งซ่อมเรียบร้อยแล้ว');
 
- const updateRepairStatus = async (repairId, newStatus) => {
-  const repair = repairs.find(r => r.id === repairId);
-  if (!repair) return;
-  if (processingIds.has(repairId)) return;
-
-  const updated = {
-    ...repair,
-    status: newStatus,
-    completedAt: newStatus === 'เสร็จสิ้น' ? formatDateTime(new Date()) : repair.completedAt
-  };
-
-  setRepairs(prev => {
-    const newRepairs = prev.map(r => r.id === repairId ? updated : r);
-    setCache(newRepairs);
-    return newRepairs;
-  });
-
-  if (newStatus === 'กำลังดำเนินการ') {
-    setTimeout(() => setStatusFilter('กำลังดำเนินการ'), 100);
-  } else if (newStatus === 'เสร็จสิ้น') {
-    setTimeout(() => setStatusFilter('เสร็จสิ้น'), 100);
-  }
-
-  setProcessingIds(prev => new Set([...prev, repairId]));
-  const success = await saveRepair(updated, 'update');
-  setProcessingIds(prev => {
-    const newSet = new Set(prev);
-    newSet.delete(repairId);
-    return newSet;
-  });
-
-  if (!success) {
-    setRepairs(prev => prev.map(r => r.id === repairId ? repair : r));
-    alert('❌ เกิดข้อผิดพลาดในการอัปเดตสถานะ กรุณาลองใหม่อีกครั้ง');
-    setStatusFilter(repair.status);
-  }
-};
-
-  const handleRatingSubmit = async () => {
-  if (ratingData.rating === 0) {
-    alert('⚠️ กรุณาให้คะแนน');
-    return;
-  }
-
-  setIsSubmitting(true);
-
-  const repair = repairs.find(r => r.id === ratingData.repairId);
-  if (!repair) {
+    setIsSubmitting(true);
+    await saveRepair(newRepair, 'add');
     setIsSubmitting(false);
-    return;
-  }
+  };
 
-  const updated = {
-    ...repair,
-    rating: {
-      technicianName: ratingData.technicianName,
-      score: ratingData.rating,
-      comment: ratingData.comment
+  const updateRepairStatus = async (repairId, newStatus) => {
+    const repair = repairs.find(r => r.id === repairId);
+    if (!repair || processingIds.has(repairId)) return;
+
+    const updated = {
+      ...repair,
+      status: newStatus,
+      completedAt: newStatus === 'เสร็จสิ้น' ? formatDateTime(new Date()) : repair.completedAt
+    };
+
+    setRepairs(prev => {
+      const newRepairs = prev.map(r => r.id === repairId ? updated : r);
+      setCache(newRepairs);
+      return newRepairs;
+    });
+
+    if (newStatus === 'กำลังดำเนินการ') {
+      setTimeout(() => setStatusFilter('กำลังดำเนินการ'), 100);
+    } else if (newStatus === 'เสร็จสิ้น') {
+      setTimeout(() => setStatusFilter('เสร็จสิ้น'), 100);
+    }
+
+    setProcessingIds(prev => new Set([...prev, repairId]));
+    const success = await saveRepair(updated, 'update');
+    setProcessingIds(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(repairId);
+      return newSet;
+    });
+
+    if (!success) {
+      setRepairs(prev => prev.map(r => r.id === repairId ? repair : r));
+      alert('❌ เกิดข้อผิดพลาดในการอัปเดตสถานะ');
+      setStatusFilter(repair.status);
     }
   };
 
-  setRepairs(prev => {
-    const newRepairs = prev.map(r => r.id === ratingData.repairId ? updated : r);
-    setCache(newRepairs);
-    return newRepairs;
-  });
+  const handleRatingSubmit = async () => {
+    if (ratingData.rating === 0) {
+      alert('⚠️ กรุณาให้คะแนน');
+      return;
+    }
 
-  const success = await saveRepair(updated, 'update');
-  
-  setIsSubmitting(false);
-  
-  if (success) {
-    await loadRepairs(true);
-    setRatingData({ repairId: null, rating: 0, comment: '', technicianName: '' });
-    alert('✅ ขอบคุณสำหรับการให้คะแนนค่ะ');
-    setCurrentView('list');
-  } else {
-    setRepairs(prev => prev.map(r => r.id === ratingData.repairId ? repair : r));
-    alert('❌ เกิดข้อผิดพลาดในการบันทึกการประเมิน');
-  }
-};
+    setIsSubmitting(true);
+    const repair = repairs.find(r => r.id === ratingData.repairId);
+    if (!repair) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    const updated = {
+      ...repair,
+      rating: {
+        technicianName: ratingData.technicianName,
+        score: ratingData.rating,
+        comment: ratingData.comment
+      }
+    };
+
+    setRepairs(prev => {
+      const newRepairs = prev.map(r => r.id === ratingData.repairId ? updated : r);
+      setCache(newRepairs);
+      return newRepairs;
+    });
+
+    const success = await saveRepair(updated, 'update');
+    setIsSubmitting(false);
+    
+    if (success) {
+      await loadRepairs(true);
+      setRatingData({ repairId: null, rating: 0, comment: '', technicianName: '' });
+      alert('✅ ขอบคุณสำหรับการให้คะแนนค่ะ');
+      setCurrentView('list');
+    } else {
+      setRepairs(prev => prev.map(r => r.id === ratingData.repairId ? repair : r));
+      alert('❌ เกิดข้อผิดพลาดในการบันทึกการประเมิน');
+    }
+  };
 
   const startRating = (repair) => {
-    setRatingData({
-      repairId: repair.id,
-      rating: 0,
-      comment: '',
-      technicianName: 'ฟลุ๊ก ศรัณย์ภัทร'
-    });
+    setRatingData({ repairId: repair.id, rating: 0, comment: '', technicianName: 'ฟลุ๊ก ศรัณย์ภัทร' });
     setCurrentView('rating');
   };
 
@@ -433,9 +359,7 @@ function RepairSystem() {
         xlsxLoadedRef.current = true;
         performExport();
       };
-      script.onerror = () => {
-        alert('❌ ไม่สามารถโหลดตัว Export ได้ กรุณาลองใหม่');
-      };
+      script.onerror = () => alert('❌ ไม่สามารถโหลดตัว Export ได้');
       document.head.appendChild(script);
     }
   };
@@ -460,19 +384,15 @@ function RepairSystem() {
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(excelData);
-
-    const colWidths = [
+    ws['!cols'] = [
       { wch: 8 }, { wch: 20 }, { wch: 20 }, { wch: 18 }, { wch: 15 }, 
       { wch: 20 }, { wch: 20 }, { wch: 40 }, { wch: 15 },
       { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 40 }
     ];
-    ws['!cols'] = colWidths;
-
     XLSX.utils.book_append_sheet(wb, ws, 'รายการแจ้งซ่อม');
 
     const date = new Date();
     const filename = `รายการแจ้งซ่อม_${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}.xlsx`;
-
     XLSX.writeFile(wb, filename);
     alert('✅ ดาวน์โหลดไฟล์ Excel เรียบร้อยแล้ว');
   };
@@ -487,52 +407,37 @@ function RepairSystem() {
   };
 
   const allDepartments = [
-  '-- เลือกแผนก/งาน --',
-  '📚 แผนก',
-  'แผนกคอมพิวเตอร์โปรแกรมเมอร์',
-  'แผนกการบัญชี',
-  'แผนกการตลาด',
-  'แผนกการจัดการสำนักงาน/การจัดการโลจิสติกส์และซัพพลายเชน',
-  'แผนกดิจิทัลกราฟิก',
-  'แผนกการท่องเที่ยว',
-  'แผนกการโรงแรม',
-  'แผนกเทคโนโลยีธุรกิจดิจิทัล',
-  'แผนกสามัญ-สัมพันธ์',
-  'แผนกคหกรรมศาสตร์',
-  'แผนกอาหารและโภชนาการ',
-  'แผนกเทคโนโลยีแฟชั่นและเครื่องแต่งกาย',
-  '🏢 งาน',
-  'งานประกันคุณภาพ',
-  'งานวัดผลและประเมินผล',
-  'งานพัฒนาหลักสูตรการเรียนการสอน',
-  'งานพัสดุ',
-  'งานการเงิน',
-  'งานบัญชี',
-  'งานทะเบียน',
-  'งานบุคลากร',
-  'งานอาคารสถานที่',
-  'งานประชาสัมพันธ์',
-  'งานความร่วมมือ',
-  'งานวางแผนและงบประมาณ',
-  'งานวิจัย',
-  'งานปกครอง',
-  'งานครูที่ปรึกษา',
-  'งานกิจกรรมนักเรียน',
-  'งานโครงการพิเศษ',
-  'งานอาชีวศึกษาระบบทวิภาคี',
-  'งานวิทยบริการและห้องสมุด',
-  'งานแนะแนวอาชีพและจัดหางาน',
-  'งานส่งเสริมผลิตผลการค้าและประกอบธุรกิจ',
-  'งานสวัสดิการนักเรียน นักศึกษา'
-];
-  
-const filteredDepts = deptSearch
-  ? allDepartments.filter(d => 
-      d.toLowerCase().includes(deptSearch.toLowerCase()) &&
-      !d.startsWith('📚') && !d.startsWith('🏢') && !d.startsWith('--')
-    )
-  : allDepartments.filter(d => !d.startsWith('--'));
-  
+    '-- เลือกแผนก/งาน --',
+    '📚 แผนก',
+    'แผนกคอมพิวเตอร์โปรแกรมเมอร์',
+    'แผนกการบัญชี',
+    'แผนกการตลาด',
+    'แผนกการจัดการสำนักงาน/การจัดการโลจิสติกส์และซัพพลายเชน',
+    'แผนกดิจิทัลกราฟิก',
+    'แผนกการท่องเที่ยว',
+    'แผนกการโรงแรม',
+    'แผนกเทคโนโลยีธุรกิจดิจิทัล',
+    'แผนกสามัญ-สัมพันธ์',
+    'แผนกคหกรรมศาสตร์',
+    'แผนกอาหารและโภชนาการ',
+    'แผนกเทคโนโลยีแฟชั่นและเครื่องแต่งกาย',
+    '🏢 งาน',
+    'งานประกันคุณภาพ', 'งานวัดผลและประเมินผล', 'งานพัฒนาหลักสูตรการเรียนการสอน',
+    'งานพัสดุ', 'งานการเงิน', 'งานบัญชี', 'งานทะเบียน', 'งานบุคลากร',
+    'งานอาคารสถานที่', 'งานประชาสัมพันธ์', 'งานความร่วมมือ',
+    'งานวางแผนและงบประมาณ', 'งานวิจัย', 'งานปกครอง', 'งานครูที่ปรึกษา',
+    'งานกิจกรรมนักเรียน', 'งานโครงการพิเศษ', 'งานอาชีวศึกษาระบบทวิภาคี',
+    'งานวิทยบริการและห้องสมุด', 'งานแนะแนวอาชีพและจัดหางาน',
+    'งานส่งเสริมผลิตผลการค้าและประกอบธุรกิจ', 'งานสวัสดิการนักเรียน นักศึกษา'
+  ];
+
+  const filteredDepts = deptSearch
+    ? allDepartments.filter(d => 
+        d.toLowerCase().includes(deptSearch.toLowerCase()) &&
+        !d.startsWith('📚') && !d.startsWith('🏢') && !d.startsWith('--')
+      )
+    : allDepartments.filter(d => !d.startsWith('--'));
+
   const filteredRepairs = useMemo(() => 
     repairs.filter(r => r.status === statusFilter),
     [repairs, statusFilter]
@@ -546,9 +451,8 @@ const filteredDepts = deptSearch
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-3 md:px-4 py-4 md:py-8 max-w-4xl">
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          {/* Header */}
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 md:p-6">
             <div className="flex items-center justify-between flex-wrap gap-3">
@@ -557,9 +461,7 @@ const filteredDepts = deptSearch
                   src="Fix-Foder/logo.png" 
                   alt="Logo" 
                   className="h-12 w-12 md:h-16 md:w-16 object-contain bg-white rounded-lg md:rounded-xl p-1 md:p-2 shadow-lg flex-shrink-0"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                  }}
+                  onError={(e) => e.target.style.display = 'none'}
                 />
                 <div className="min-w-0 flex-1">
                   <h1 className="text-base md:text-2xl lg:text-3xl font-bold mb-1 leading-tight">ระบบแจ้งซ่อมคอมพิวเตอร์และอุปกรณ์</h1>
@@ -571,8 +473,7 @@ const filteredDepts = deptSearch
               <div className="flex items-center gap-2 text-xs md:text-sm">
                 <div className={`h-2 w-2 rounded-full ${
                   connectionStatus === 'connected' ? 'bg-green-400 animate-pulse' :
-                  connectionStatus === 'error' ? 'bg-red-400' :
-                  'bg-yellow-400 animate-pulse'
+                  connectionStatus === 'error' ? 'bg-red-400' : 'bg-yellow-400 animate-pulse'
                 }`}></div>
                 <span className="text-blue-100 truncate">
                   {connectionStatus === 'connected' && '🟢 เชื่อมต่อสำเร็จ'}
@@ -594,17 +495,17 @@ const filteredDepts = deptSearch
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 m-6 rounded-r-lg animate-slideIn">
+            <div className="bg-red-50 border-l-4 border-red-500 p-3 md:p-4 m-3 md:m-6 rounded-r-lg animate-slideIn">
               <div className="flex items-start">
-                <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
-                <div>
-                  <h3 className="text-sm font-medium text-red-800 mb-1">เกิดข้อผิดพลาด</h3>
-                  <p className="text-sm text-red-700 whitespace-pre-line">{errorMessage}</p>
+                <AlertCircle className="h-4 w-4 md:h-5 md:w-5 text-red-500 mt-0.5 mr-2 md:mr-3 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xs md:text-sm font-medium text-red-800 mb-1">เกิดข้อผิดพลาด</h3>
+                  <p className="text-xs md:text-sm text-red-700 whitespace-pre-line break-words">{errorMessage}</p>
                   <button
                     onClick={() => loadRepairs(true)}
-                    className="mt-3 flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-all"
+                    className="mt-2 md:mt-3 flex items-center gap-1 md:gap-2 bg-red-600 hover:bg-red-700 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm transition-all"
                   >
-                    <RefreshCw className="h-4 w-4" />
+                    <RefreshCw className="h-3 w-3 md:h-4 md:w-4" />
                     ลองเชื่อมต่อใหม่
                   </button>
                 </div>
