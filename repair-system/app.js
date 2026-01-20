@@ -752,39 +752,55 @@ function RepairSystem() {
                 {/* List View */}
                 {currentView === 'list' && (
                   <div className="space-y-4 animate-fadeIn">
-                    <div className="flex border-b border-gray-200 overflow-x-auto">
-                      <button
-                        onClick={() => setStatusFilter('รอดำเนินการ')}
-                        className={`px-6 py-3 font-medium whitespace-nowrap transition-all ${
-                          statusFilter === 'รอดำเนินการ'
-                            ? 'text-yellow-600 border-b-2 border-yellow-600 bg-yellow-50'
-                            : 'text-gray-600 hover:text-yellow-600 hover:bg-gray-50'
-                        }`}
-                      >
-                        ⏳ รอดำเนินการ ({statusCounts.รอดำเนินการ})
-                      </button>
-                      <button
-                        onClick={() => setStatusFilter('กำลังดำเนินการ')}
-                        className={`px-6 py-3 font-medium whitespace-nowrap transition-all ${
-                          statusFilter === 'กำลังดำเนินการ'
-                            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                            : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
-                        }`}
-                      >
-                        🔧 กำลังดำเนินการ ({statusCounts.กำลังดำเนินการ})
-                      </button>
-                      <button
-                        onClick={() => setStatusFilter('เสร็จสิ้น')}
-                        className={`px-6 py-3 font-medium whitespace-nowrap transition-all ${
-                          statusFilter === 'เสร็จสิ้น'
-                            ? 'text-green-600 border-b-2 border-green-600 bg-green-50'
-                            : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
-                        }`}
-                      >
-                        ✅ เสร็จสิ้น ({statusCounts.เสร็จสิ้น})
-                      </button>
-                    </div>
-
+                    <div className="grid grid-cols-3 gap-2 md:gap-3 bg-gray-100 p-2 rounded-lg">
+  <button
+    onClick={() => setStatusFilter('รอดำเนินการ')}
+    className={`py-3 md:py-4 px-2 md:px-4 rounded-md font-medium text-xs md:text-base transition-all ${
+      statusFilter === 'รอดำเนินการ'
+        ? 'bg-yellow-500 text-white shadow-md'
+        : 'text-gray-600 hover:bg-gray-200'
+    }`}
+  >
+    <div className="flex flex-col items-center gap-1 md:gap-2">
+      <span className="text-lg md:text-2xl">⏳</span>
+      <span className="hidden sm:inline">รอดำเนินการ</span>
+      <span className="sm:hidden">รอ</span>
+      <span className="font-bold text-sm md:text-base">({statusCounts.รอดำเนินการ})</span>
+    </div>
+  </button>
+  
+  <button
+    onClick={() => setStatusFilter('กำลังดำเนินการ')}
+    className={`py-3 md:py-4 px-2 md:px-4 rounded-md font-medium text-xs md:text-base transition-all ${
+      statusFilter === 'กำลังดำเนินการ'
+        ? 'bg-blue-500 text-white shadow-md'
+        : 'text-gray-600 hover:bg-gray-200'
+    }`}
+  >
+    <div className="flex flex-col items-center gap-1 md:gap-2">
+      <span className="text-lg md:text-2xl">🔧</span>
+      <span className="hidden sm:inline">กำลังดำเนินการ</span>
+      <span className="sm:hidden">กำลังซ่อม</span>
+      <span className="font-bold text-sm md:text-base">({statusCounts.กำลังดำเนินการ})</span>
+    </div>
+  </button>
+  
+  <button
+    onClick={() => setStatusFilter('เสร็จสิ้น')}
+    className={`py-3 md:py-4 px-2 md:px-4 rounded-md font-medium text-xs md:text-base transition-all ${
+      statusFilter === 'เสร็จสิ้น'
+        ? 'bg-green-500 text-white shadow-md'
+        : 'text-gray-600 hover:bg-gray-200'
+    }`}
+  >
+    <div className="flex flex-col items-center gap-1 md:gap-2">
+      <span className="text-lg md:text-2xl">✅</span>
+      <span className="hidden sm:inline">เสร็จสิ้น</span>
+      <span className="sm:hidden">เสร็จ</span>
+      <span className="font-bold text-sm md:text-base">({statusCounts.เสร็จสิ้น})</span>
+    </div>
+  </button>
+</div>
                     {filteredRepairs.length > 0 && (
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-200">
                         <div className="flex items-center gap-2">
