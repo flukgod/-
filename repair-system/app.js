@@ -1,9 +1,8 @@
-
 const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHFBC0J7SjE-26KUI1YyFXiAdfzZWGEHRa0qimnXUKK5_1gMW9wcnkgjVJNtcgY9myjw/exec';
 const CACHE_KEY = 'repair_cache';
-const CACHE_DURATION = 300000;
+const CACHE_DURATION = 60000;
 const FILTER_KEY = 'status_filter';
 
 const AlertCircle = ({ className }) => (
@@ -131,81 +130,21 @@ function RepairSystem() {
   }, []);
 
   useEffect(() => {
-  loadRepairs();
-  
-  const interval = setInterval(() => {
-    if (currentView === 'list' && !isSubmitting && processingIds.size === 0) {
-      loadRepairs(true);
-    }
-  }, 60000);
-  
-  return () => {
-    clearInterval(interval);
-    if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
-  };
-}, [currentView, isSubmitting, processingIds.size, loadRepairs]);
+    try {
+      localStorage.setItem(FILTER_KEY, statusFilter);
+    } catch (e) {}
+  }, [statusFilter]);
 
- useEffect(() => {
-  try {
-    const draft = localStorage.getItem('repair_draft');
-    if (draft) {
-      setFormData(JSON.parse(draft));
-    }
-  } catch (e) {
-    console.warn('Load draft error:', e);
-  }
-}, []); 
-
-const draftTimerRef = useRef(null);
-
-useEffect(() => {
-  if (draftTimerRef.current) {
-    clearTimeout(draftTimerRef.current);
-  }
-
-  if (formData.teacherName || formData.department || formData.description) {
-    draftTimerRef.current = setTimeout(() => {
-      try {
-        localStorage.setItem('repair_draft', JSON.stringify(formData));
-      } catch (e) {
-        console.warn('Save draft error:', e);
+  const loadRepairs = useCallback(async (forceRefresh = false) => {
+    if (!forceRefresh) {
+      const cached = getCache();
+      if (cached) {
+        setRepairs(cached.sort((a, b) => b.id - a.id));
+        setConnectionStatus('connected');
+        setLoading(false);
+        return;
       }
-    }, 2000); // เพิ่มเป็น 2 วินาที
-  }
-
-  return () => {
-    if (draftTimerRef.current) {
-      clearTimeout(draftTimerRef.current);
     }
-  };
-}, [formData]);
-
-useEffect(() => {
-  try {
-    localStorage.setItem(FILTER_KEY, statusFilter);
-  } catch (e) {}
-}, [statusFilter]);
-  
-  const loadRepairs = useCallback(async (forceRefresh = false, retryCount = 0) => {
-  // ... existing code ...
-  
-  } catch (error) {
-    clearTimeout(loadTimeoutRef.current);
-    console.error('Error loading repairs:', error);
-    setConnectionStatus('error');
-    
-    // ✅ ถ้า error และยังไม่ถึง 3 ครั้ง ให้ retry อัตโนมัติ
-    if (retryCount < 3 && error.name === 'AbortError') {
-      console.log(`⏱️ Retrying... (${retryCount + 1}/3)`);
-      setTimeout(() => {
-        loadRepairs(forceRefresh, retryCount + 1);
-      }, 2000); // รอ 2 วินาทีแล้วลองใหม่
-      return;
-    }
-    
-    // ... existing error handling ...
-  }
-}, [getCache, setCache]);
 
     setLoading(true);
     setErrorMessage('');
@@ -239,26 +178,10 @@ useEffect(() => {
       } else {
         throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
       }
-    const loadRepairs = useCallback(async (forceRefresh = false, retryCount = 0) => {
-  // ... existing code ...
-  
-  } catch (error) {
-    clearTimeout(loadTimeoutRef.current);
-    console.error('Error loading repairs:', error);
-    
-    // ✅ Auto Retry สูงสุด 3 ครั้ง
-    if (retryCount < 3 && error.name === 'AbortError') {
-      console.log(`⏱️ Retrying... (${retryCount + 1}/3)`);
-      setTimeout(() => {
-        loadRepairs(forceRefresh, retryCount + 1);
-      }, 2000);
-      return;
-    }
-    
-    setConnectionStatus('error');
-    setErrorMessage(message);
-  }
-}, [getCache, setCache]);
+    } catch (error) {
+      clearTimeout(loadTimeoutRef.current);
+      console.error('Error loading repairs:', error);
+      setConnectionStatus('error');
       let message = 'ไม่สามารถโหลดข้อมูลได้';
       if (error.name === 'AbortError') {
         message = '⏱️ หมดเวลาการเชื่อมต่อ (Timeout)\n\nกรุณา:\n• ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n• ลองใหม่อีกครั้ง';
@@ -271,6 +194,11 @@ useEffect(() => {
       setLoading(false);
     }
   }, [getCache, setCache]);
+
+  useEffect(() => {
+    loadRepairs();
+    return () => { if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current); };
+  }, [loadRepairs]);
 
   const saveRepair = async (repair, action) => {
     try {
@@ -322,11 +250,6 @@ useEffect(() => {
       return newRepairs;
     });
     setFormData({ teacherName: '', department: '', assetNumber: '', phone: '', problemType: '', description: '', location: '' });
-    try {
-      localStorage.removeItem('repair_draft');
-    } catch (e) {
-      console.warn('Remove draft error:', e);
-    }
     setStatusFilter('รอดำเนินการ');
     setCurrentView('list');
     alert('✅ บันทึกการแจ้งซ่อมเรียบร้อยแล้ว');
@@ -507,15 +430,12 @@ useEffect(() => {
     'งานส่งเสริมผลิตผลการค้าและประกอบธุรกิจ', 'งานสวัสดิการนักเรียน นักศึกษา'
   ];
 
-  const filteredDepts = useMemo(() => {
-  if (!deptSearch) {
-    return allDepartments.filter(d => !d.startsWith('--'));
-  }
-  return allDepartments.filter(d => 
-    d.toLowerCase().includes(deptSearch.toLowerCase()) &&
-    !d.startsWith('📚') && !d.startsWith('🏢') && !d.startsWith('--')
-  );
-}, [deptSearch]);
+  const filteredDepts = deptSearch
+    ? allDepartments.filter(d => 
+        d.toLowerCase().includes(deptSearch.toLowerCase()) &&
+        !d.startsWith('📚') && !d.startsWith('🏢') && !d.startsWith('--')
+      )
+    : allDepartments.filter(d => !d.startsWith('--'));
 
   const filteredRepairs = useMemo(() => 
     repairs.filter(r => r.status === statusFilter),
@@ -594,29 +514,27 @@ useEffect(() => {
 
           {/* Navigation Tabs */}
           <div className="flex border-b">
-  <button
-    onClick={() => setCurrentView('home')}
-    className={`flex-1 py-2.5 md:py-3 px-3 md:px-4 font-medium text-sm md:text-base transition-all ${
-      currentView === 'home'
-        ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
-        : 'text-gray-600 hover:bg-gray-50'
-    }`}
-  >
-    <span className="hidden sm:inline">📝 แจ้งซ่อม</span>
-    <span className="sm:hidden">📝</span>
-  </button>
-  <button
-    onClick={() => setCurrentView('list')}
-    className={`flex-1 py-2.5 md:py-3 px-3 md:px-4 font-medium text-sm md:text-base transition-all ${
-      currentView === 'list'
-        ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
-        : 'text-gray-600 hover:bg-gray-50'
-    }`}
-  >
-    <span className="hidden sm:inline">📋 รายการแจ้งซ่อม ({statusCounts.รอดำเนินการ})</span>
-    <span className="sm:hidden">📋 ({statusCounts.รอดำเนินการ})</span>
-  </button>
-</div>
+            <button
+              onClick={() => setCurrentView('home')}
+              className={`flex-1 py-3 px-4 font-medium transition-all ${
+                currentView === 'home'
+                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              📝 แจ้งซ่อม
+            </button>
+            <button
+              onClick={() => setCurrentView('list')}
+              className={`flex-1 py-3 px-4 font-medium transition-all ${
+                currentView === 'list'
+                  ? 'bg-blue-50 text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              📋 รายการแจ้งซ่อม ({statusCounts.รอดำเนินการ})
+            </button>
+          </div>
 
           {/* Content */}
           <div className="p-6">
@@ -883,49 +801,31 @@ useEffect(() => {
   </button>
 </div>
                     {filteredRepairs.length > 0 && (
-                    {/* ✅ ปุ่ม Refresh */}
-<div className="flex items-center justify-between gap-2 mb-3">
-  <button
-    onClick={() => loadRepairs(true)}
-    disabled={loading}
-    className={`flex items-center gap-2 bg-blue-600 text-white px-3 md:px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md ${loading ? 'animate-pulse' : ''}`}
-  >
-    <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-    <span className="hidden sm:inline">{loading ? 'กำลังโหลด...' : 'รีเฟรชข้อมูล'}</span>
-    <span className="sm:hidden">รีเฟรช</span>
-  </button>
-  <span className="text-xs text-gray-500">
-    <span className="hidden md:inline">อัปเดตอัตโนมัติทุก 1 นาที</span>
-    <span className="md:hidden">Auto: 1 นาที</span>
-  </span>
-</div>
-
-{filteredRepairs.length > 0 && (
-  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-200">
-    <div className="flex items-center gap-2">
-      <div className="bg-blue-100 p-2 rounded-lg">
-        <Database className="h-5 w-5 text-blue-600" />
-      </div>
-      <div>
-        <p className="text-sm font-semibold text-gray-700">
-          {statusFilter} {filteredRepairs.length} รายการ
-        </p>
-        <p className="text-xs text-gray-500">
-          ทั้งหมด {repairs.length} รายการ
-        </p>
-      </div>
-    </div>
-    {statusFilter === 'เสร็จสิ้น' && (
-      <button
-        onClick={exportToExcel}
-        className="flex items-center gap-2 bg-green-600 text-white py-2.5 px-5 rounded-lg font-medium hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-      >
-        <Download className="h-5 w-5" />
-        Export Excel
-      </button>
-    )}
-  </div>
-)}
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <div className="bg-blue-100 p-2 rounded-lg">
+                            <Database className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-700">
+                              {statusFilter} {filteredRepairs.length} รายการ
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              ทั้งหมด {repairs.length} รายการ
+                            </p>
+                          </div>
+                        </div>
+                        {statusFilter === 'เสร็จสิ้น' && (
+                          <button
+                            onClick={exportToExcel}
+                            className="flex items-center gap-2 bg-green-600 text-white py-2.5 px-5 rounded-lg font-medium hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                          >
+                            <Download className="h-5 w-5" />
+                            Export Excel
+                          </button>
+                        )}
+                      </div>
+                    )}
 
                     {filteredRepairs.length === 0 ? (
                       <div className="text-center py-16 text-gray-500">
@@ -955,7 +855,7 @@ useEffect(() => {
                                     </p>
                                   </div>
                                 </div>
-                                <span className={`px-3 md:px-4 py-1 md:py-1.5 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap ${getStatusColor(repair.status)}`}>
+                                <span className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap ${getStatusColor(repair.status)}`}>
                                   {repair.status}
                                 </span>
                               </div>
@@ -1186,4 +1086,3 @@ useEffect(() => {
 // Render App
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<RepairSystem />);
-                          
