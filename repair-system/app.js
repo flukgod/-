@@ -134,7 +134,6 @@ function RepairSystem() {
   loadRepairs();
   
   const interval = setInterval(() => {
-    // ✅ Refresh เฉพาะตอนที่อยู่หน้า list เท่านั้น
     if (currentView === 'list' && !isSubmitting && processingIds.size === 0) {
       loadRepairs(true);
     }
@@ -144,7 +143,7 @@ function RepairSystem() {
     clearInterval(interval);
     if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
   };
-}, []); // ไม่ต้องใส่ dependencies
+}, [currentView, isSubmitting, processingIds.size, loadRepairs]);
 
  useEffect(() => {
   try {
@@ -157,19 +156,28 @@ function RepairSystem() {
   }
 }, []); 
 
+const draftTimerRef = useRef(null);
+
 useEffect(() => {
+  if (draftTimerRef.current) {
+    clearTimeout(draftTimerRef.current);
+  }
+
   if (formData.teacherName || formData.department || formData.description) {
-    // ✅ ใช้ debounce เพื่อลด write operations
-    const timeoutId = setTimeout(() => {
+    draftTimerRef.current = setTimeout(() => {
       try {
         localStorage.setItem('repair_draft', JSON.stringify(formData));
       } catch (e) {
         console.warn('Save draft error:', e);
       }
-    }, 1000); // รอ 1 วินาทีหลังหยุดพิมพ์
-
-    return () => clearTimeout(timeoutId);
+    }, 2000); // เพิ่มเป็น 2 วินาที
   }
+
+  return () => {
+    if (draftTimerRef.current) {
+      clearTimeout(draftTimerRef.current);
+    }
+  };
 }, [formData]);
 
 useEffect(() => {
@@ -231,10 +239,26 @@ useEffect(() => {
       } else {
         throw new Error('รูปแบบข้อมูลไม่ถูกต้อง');
       }
-    } catch (error) {
-      clearTimeout(loadTimeoutRef.current);
-      console.error('Error loading repairs:', error);
-      setConnectionStatus('error');
+    const loadRepairs = useCallback(async (forceRefresh = false, retryCount = 0) => {
+  // ... existing code ...
+  
+  } catch (error) {
+    clearTimeout(loadTimeoutRef.current);
+    console.error('Error loading repairs:', error);
+    
+    // ✅ Auto Retry สูงสุด 3 ครั้ง
+    if (retryCount < 3 && error.name === 'AbortError') {
+      console.log(`⏱️ Retrying... (${retryCount + 1}/3)`);
+      setTimeout(() => {
+        loadRepairs(forceRefresh, retryCount + 1);
+      }, 2000);
+      return;
+    }
+    
+    setConnectionStatus('error');
+    setErrorMessage(message);
+  }
+}, [getCache, setCache]);
       let message = 'ไม่สามารถโหลดข้อมูลได้';
       if (error.name === 'AbortError') {
         message = '⏱️ หมดเวลาการเชื่อมต่อ (Timeout)\n\nกรุณา:\n• ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต\n• ลองใหม่อีกครั้ง';
@@ -483,12 +507,15 @@ useEffect(() => {
     'งานส่งเสริมผลิตผลการค้าและประกอบธุรกิจ', 'งานสวัสดิการนักเรียน นักศึกษา'
   ];
 
-  const filteredDepts = deptSearch
-    ? allDepartments.filter(d => 
-        d.toLowerCase().includes(deptSearch.toLowerCase()) &&
-        !d.startsWith('📚') && !d.startsWith('🏢') && !d.startsWith('--')
-      )
-    : allDepartments.filter(d => !d.startsWith('--'));
+  const filteredDepts = useMemo(() => {
+  if (!deptSearch) {
+    return allDepartments.filter(d => !d.startsWith('--'));
+  }
+  return allDepartments.filter(d => 
+    d.toLowerCase().includes(deptSearch.toLowerCase()) &&
+    !d.startsWith('📚') && !d.startsWith('🏢') && !d.startsWith('--')
+  );
+}, [deptSearch]);
 
   const filteredRepairs = useMemo(() => 
     repairs.filter(r => r.status === statusFilter),
