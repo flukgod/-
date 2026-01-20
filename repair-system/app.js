@@ -1,6 +1,6 @@
 const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHFBC0J7SjE-26KUI1YyFXiAdfzZWGEHRa0qimnXUKK5_1gMW9wcnkgjVJNtcgY9myjw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwc2T7-jiyogOHFI5Cdq4At7WwXyomACtp-vhPN-jg1RcE38C3C97K3tOUd2ZTaqLu9XA/exec';
 const CACHE_KEY = 'repair_cache';
 const CACHE_DURATION = 60000;
 const FILTER_KEY = 'status_filter';
