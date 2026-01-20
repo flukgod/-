@@ -71,6 +71,7 @@ function RepairSystem() {
       return 'รอดำเนินการ';
     }
   });
+  const [searchQuery, setSearchQuery] = useState('');
   const [repairs, setRepairs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
@@ -438,9 +439,20 @@ function RepairSystem() {
     : allDepartments.filter(d => !d.startsWith('--'));
 
   const filteredRepairs = useMemo(() => 
-    repairs.filter(r => r.status === statusFilter),
-    [repairs, statusFilter]
-  );
+  repairs
+    .filter(r => r.status === statusFilter)
+    .filter(r => {
+      if (searchQuery === '') return true;
+      const search = searchQuery.toLowerCase();
+      return (
+        r.teacherName.toLowerCase().includes(search) ||
+        r.department.toLowerCase().includes(search) ||
+        r.assetNumber.includes(search) ||
+        r.phone.includes(search)
+      );
+    }),
+  [repairs, statusFilter, searchQuery]
+);
 
   const statusCounts = useMemo(() => ({
     รอดำเนินการ: repairs.filter(r => r.status === 'รอดำเนินการ').length,
@@ -799,6 +811,34 @@ function RepairSystem() {
       <span className="font-bold text-sm md:text-base">({statusCounts.เสร็จสิ้น})</span>
     </div>
   </button>
+</div>
+{/* ช่องค้นหา */}
+<div className="mt-4">
+  <div className="relative">
+    <input
+      type="text"
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      placeholder="🔍 ค้นหาชื่อผู้แจ้ง, แผนก, หมายเลขครุภัณฑ์, เบอร์โทร..."
+      className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+    />
+    <div className="absolute left-3 top-3.5 text-gray-400 text-xl">
+      🔍
+    </div>
+    {searchQuery && (
+      <button
+        onClick={() => setSearchQuery('')}
+        className="absolute right-3 top-3 text-gray-400 hover:text-red-500 font-bold text-lg"
+      >
+        ✕
+      </button>
+    )}
+  </div>
+  {searchQuery && (
+    <p className="text-xs text-gray-500 mt-2">
+      🔎 พบ {filteredRepairs.length} รายการจากคำค้นหา "{searchQuery}"
+    </p>
+  )}
 </div>
                     {filteredRepairs.length > 0 && (
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-lg border border-gray-200">
