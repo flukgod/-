@@ -3,7 +3,7 @@ const { useState, useEffect, useCallback, useMemo, useRef } = React;
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHFBC0J7SjE-26KUI1YyFXiAdfzZWGEHRa0qimnXUKK5_1gMW9wcnkgjVJNtcgY9myjw/exec';
 const CACHE_KEY = 'repair_cache';
-const CACHE_DURATION = 600000;
+const CACHE_DURATION = 60000;
 const FILTER_KEY = 'status_filter';
 
 const AlertCircle = ({ className }) => (
