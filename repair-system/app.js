@@ -811,7 +811,7 @@ function RepairSystem() {
                               {statusFilter} {filteredRepairs.length} รายการ
                             </p>
                             <p className="text-xs text-gray-500">
-                              ทั้งหมด {repairs.length} รายการ
+                              ทั้งหมด {filteredRepairs.length} รายการ
                             </p>
                           </div>
                         </div>
